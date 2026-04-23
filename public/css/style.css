@@ -1,0 +1,915 @@
+/* Design Tokens */
+:root {
+    /* Colors - Paper Theme (Default) */
+    --c-bg: #F7F5EB;
+    /* 優しいクリーム色 */
+    --c-text: #2C2C2C;
+    /* 視認性の高いダークグレー */
+    --c-accent: #8E354A;
+    /* 落ち着いた紅梅色 */
+    --c-border: #E0DDCF;
+    --c-overlay: rgba(255, 255, 255, 0.95);
+
+    /* Dimensions */
+    --header-height: 60px;
+    --viewer-padding-y: 5vh;
+    --viewer-padding-x: 5vw;
+
+    /* Typography */
+    --font-serif: "Shippori Mincho", "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif;
+    --viewer-line-height: 1.8;
+    --viewer-paragraph-spacing: 1.5em;
+    /* 改行幅（段落間） */
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --c-bg: #1A1B1E;
+    --c-text: #C8C8C8;
+    --c-accent: #7289DA;
+    --c-border: #333333;
+    --c-overlay: rgba(26, 27, 30, 0.95);
+}
+
+/* Sepia Theme */
+[data-theme="sepia"] {
+    --c-bg: #f4ecd8;
+    --c-text: #5b4636;
+    --c-border: #e3d3b6;
+    --c-overlay: rgba(244, 236, 216, 0.95);
+}
+
+/* Reset & Base */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: var(--font-serif);
+    background-color: var(--c-bg);
+    color: var(--c-text);
+    line-height: var(--viewer-line-height);
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    /* Mobile fix */
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.no-scroll {
+    overflow: hidden;
+    height: 100vh;
+    height: 100dvh;
+    /* Mobile fix */
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Utilities */
+.hidden {
+    display: none !important;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* --- Reader Specific (Step 4-3先取り) --- */
+#viewer-container {
+    width: 100%;
+    height: 100%;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    /* 縦書き設定 */
+    writing-mode: vertical-rl;
+    -webkit-writing-mode: vertical-rl;
+
+    /* Scroll Snap */
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+
+    /* Hide Scrollbar */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+}
+
+#viewer-container::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari */
+}
+
+#content-layer {
+    height: 100%;
+    /* 上は5vh, 下はスマホのアドレスバー対策で多め(10vh + 30px)にとる */
+    padding: 5vh var(--viewer-padding-x) calc(10vh + 40px) var(--viewer-padding-x);
+
+    /* Column Layout: 画面幅に合わせて段組みする */
+    column-width: 90vh;
+    /* 縦書きなのでwidthが高さに相当するが、column-widthは「段の幅」 */
+    column-gap: 5vw;
+    column-fill: auto;
+
+    /* 長文の表示制御 */
+    text-align: justify;
+}
+
+/* 段落設定 */
+.ep-body p,
+.ep-body div {
+    margin-left: var(--viewer-paragraph-spacing);
+    /* 縦書きなのでmargin-leftが段落下の余白になる */
+}
+
+/* UI Layer */
+#ui-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    /* 下の文字操作を邪魔しない */
+    z-index: 100;
+}
+
+/* Menu Overlay */
+.menu-overlay {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--c-overlay);
+    border-top: 1px solid var(--c-border);
+    padding: 15px 10px 30px;
+    /* 下側に余裕を持たせる(スマホ配慮) */
+    pointer-events: auto;
+
+    backdrop-filter: blur(10px);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 200;
+}
+
+.menu-overlay.active {
+    transform: translateY(0);
+}
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* 下段（6枚目以降）の配置調整 */
+/* Tap Zones for 1-Action Page Turning */
+#tap-zone-next,
+#tap-zone-prev {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 25vw;
+    z-index: 50;
+    pointer-events: none;
+    cursor: pointer;
+}
+
+#tap-zone-next {
+    left: 0;
+}
+
+/* 縦書きなので左側が次ページの場合が多い */
+#tap-zone-prev {
+    right: 0;
+}
+
+/* 右側が前ページ */
+
+/* UI Layer Improvements */
+#ui-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 100;
+}
+
+#tap-zone-center {
+    position: absolute;
+    top: 15%;
+    left: 30%;
+    width: 40%;
+    height: 70%;
+    pointer-events: none;
+}
+
+/* --- Menu Grid & Buttons/* 下段（6枚目以降）の配置調整 */
+#btn-bookmark,
+#btn-home,
+#btn-settings {
+    grid-row: 2;
+}
+
+#btn-bookmark {
+    grid-column: 2;
+}
+
+#btn-home {
+    grid-column: 3;
+}
+
+#btn-settings {
+    grid-column: 4;
+}
+
+.menu-btn-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--c-text);
+    cursor: pointer;
+    padding: 10px 5px;
+    border-radius: 8px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-btn-icon:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .menu-btn-icon:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.menu-btn-icon:active {
+    background-color: rgba(0, 0, 0, 0.1);
+    transform: scale(0.95);
+}
+
+.menu-btn-icon .material-symbols-rounded {
+    font-size: 32px;
+    /* 少し大きく */
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+.menu-btn-icon .btn-label {
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+}
+
+.menu-btn-icon:disabled {
+    opacity: 0.15 !important;
+    /* ほとんど見えないくらいにする */
+    filter: grayscale(1);
+    cursor: not-allowed;
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 16px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    text-align: center;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+.container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    margin-bottom: 20px;
+}
+
+.app-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+}
+
+/* List Tabs */
+.list-tabs {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    padding-bottom: 4px;
+    /* スクロールバーとの干渉防止 */
+    margin-bottom: 24px;
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.list-tabs::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari */
+}
+
+.tab-btn {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--c-border);
+    background: transparent;
+    color: var(--c-text);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.tab-btn.active {
+    background: var(--c-text);
+    color: var(--c-bg);
+    border-color: var(--c-text);
+}
+
+.tab-btn-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    /* 高さ固定で丸く */
+    padding: 0;
+    border-radius: 50%;
+    border: 1px dashed var(--c-text);
+    opacity: 0.6;
+}
+
+.tab-btn-add:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+
+.novel-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.novel-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    user-select: none;
+    position: relative;
+    /* Badge用 */
+    overflow: hidden;
+
+    /* Layout */
+    flex-direction: row;
+    gap: 12px;
+}
+
+/* NEW Badge */
+.card-badge-new {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    /* 左へ移動 */
+    background: #ff4081;
+    /* 鮮やかなピンク/赤 */
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 5;
+    pointer-events: none;
+}
+
+[data-theme="dark"] .novel-card {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.novel-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.novel-info {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    padding-left: 50px;
+    /* NEWバッジの場所を確保 */
+}
+
+.novel-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    line-height: 1.4;
+
+    /* 2行で省略 */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.novel-author {
+    font-size: 0.85rem;
+    color: var(--c-text);
+    opacity: 0.8;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.novel-meta {
+    font-size: 0.75rem;
+    color: var(--c-text);
+    opacity: 0.6;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* 独立した栞ボタン */
+.card-actions {
+    flex-shrink: 0;
+}
+
+.card-bookmark-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--c-accent);
+    color: var(--c-accent);
+    padding: 4px 8px;
+    /* パディングを小さく */
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 48px;
+    /* 幅も少し小さく */
+}
+
+.card-bookmark-btn:hover {
+    background: var(--c-accent);
+    color: #fff;
+}
+
+.card-bookmark-btn .material-symbols-rounded {
+    font-size: 20px;
+    /* アイコン小さく */
+    margin-bottom: 0;
+}
+
+.bookmark-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+.novel-meta .meta-progress {
+    font-weight: 700;
+    color: var(--c-accent);
+}
+
+.novel-meta .meta-date {
+    font-size: 0.7rem;
+    color: var(--c-text);
+    opacity: 0.6;
+}
+
+/* Floating Action Button (for Settings/Crawler trigger) */
+.fab {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--c-text);
+    color: var(--c-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 100;
+    font-size: 1.5rem;
+}
+
+/* Card Menu Button */
+.card-menu-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--c-text);
+    opacity: 0;
+    /* 通常時は隠す */
+    transition: opacity 0.2s, background 0.2s;
+    z-index: 10;
+}
+
+.novel-card:hover .card-menu-btn {
+    opacity: 0.6;
+}
+
+.card-menu-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    opacity: 1 !important;
+}
+
+.card-menu-btn .material-symbols-rounded {
+    font-size: 20px;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    backdrop-filter: blur(2px);
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background: var(--c-bg);
+    color: var(--c-text);
+    padding: 20px;
+    border-radius: 12px;
+    width: 85%;
+    max-width: 360px;
+    border: 1px solid var(--c-border);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.list-select-container {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.list-select-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.list-select-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.list-select-item[data-selected="true"] {
+    background: var(--c-accent);
+    color: #fff;
+}
+
+.modal-close-btn {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    color: var(--c-text);
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+/* Modal Inputs & Actions */
+.modal-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.modal-btn.primary {
+    background: var(--c-accent);
+    color: #fff;
+}
+
+.modal-btn.secondary {
+    background: transparent;
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+}
+
+.modal-desc {
+    font-size: 0.9rem;
+    color: var(--c-text);
+    opacity: 0.8;
+    margin-bottom: 12px;
+}
+
+.modal-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--c-text);
+}
+
+.modal-select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--c-text);
+}
+
+/* Panels (Settings, TOC) */
+.settings-panel,
+.toc-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--c-surface);
+    /* Panel Background Fixes (Prevent transparency) */
+    background-color: #fff;
+    /* Light default */
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-panel.active,
+.toc-panel.active {
+    transform: translateY(0);
+}
+
+.panel-header {
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--c-border);
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.panel-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--c-text);
+}
+
+.panel-body {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.panel-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1900;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.panel-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Settings Controls */
+.setting-item {
+    margin-bottom: 24px;
+}
+
+.setting-item label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.segment-control {
+    display: flex;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.segment-control button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: var(--c-surface);
+    border-right: 1px solid var(--c-border);
+    cursor: pointer;
+    color: var(--c-text);
+}
+
+.segment-control button:last-child {
+    border-right: none;
+}
+
+.segment-control button.active {
+    background: var(--c-accent);
+    color: #fff;
+}
+
+/* Theme Selector */
+.theme-selector {
+    display: flex;
+    gap: 12px;
+}
+
+.theme-btn {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.theme-btn.active {
+    border-color: var(--c-accent);
+}
+
+.theme-btn.light {
+    background: #fffcf5;
+    color: #333;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.theme-btn.sepia {
+    background: #f4ecd8;
+    color: #5b4636;
+}
+
+.theme-btn.dark {
+    background: #1a1a1a;
+    color: #ccc;
+}
+
+/* TOC List */
+.toc-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--c-border);
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.toc-item.current {
+    font-weight: 700;
+    color: var(--c-accent);
+}
+
+.toc-item:last-child {
+    border-bottom: none;
+}
+
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+[data-theme="sepia"] .settings-panel,
+[data-theme="sepia"] .toc-panel {
+    background-color: #f4ecd8;
+}
+
+[data-theme="dark"] .settings-panel,
+[data-theme="dark"] .toc-panel {
+    background-color: #1a1a1a;
+    border-top: 1px solid #333;
+}

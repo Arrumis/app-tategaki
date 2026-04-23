@@ -1,0 +1,27 @@
+services:
+  app:
+    # Traefik環境ではポートバインディングを無効化し、ネットワーク経由でアクセスさせる
+    # 注意: このファイルを使用する際は、compose.yaml の ports セクションをコメントアウトするか、
+    # 以下の設定で上書きすることを意識してください。
+    # (docker-composeの仕様上、リストはマージされるため、ports: [] で空にするハックが必要な場合があるが、
+    #  最も確実なのは Traefik 専用の compose ファイルを用意するか、環境変数でポートマッピングを制御することです。
+    #  ここでは、Traefikネットワークに参加し、ラベルを付与する設定例を示します)
+
+    ports: []
+
+    labels:
+      - "traefik.enable=true"
+      # ルーター設定 (ホスト名は環境に合わせて変更してください)
+      - "traefik.http.routers.app-tategaki.rule=Host(`tategaki.local`)"
+      - "traefik.http.routers.app-tategaki.entrypoints=web"
+      # ロードバランサー設定 (コンテナ内のポートを指定)
+      - "traefik.http.services.app-tategaki.loadbalancer.server.port=3000"
+
+    # Traefikが所属する外部ネットワークに参加
+    networks:
+      - traefik_net
+
+# 外部ネットワークの定義
+networks:
+  traefik_net:
+    external: true

@@ -1,0 +1,23 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - "${HOST_DATA_DIR:-./data}:/app/data"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATA_DIR: /app/data
+      TZ: "${TZ:-Asia/Tokyo}"
+      CRAWL_INTERVAL_MS: "${CRAWL_INTERVAL_MS:-10800000}"
+      REQUEST_DELAY_MS: "${REQUEST_DELAY_MS:-3000}"
+    ipc: host
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

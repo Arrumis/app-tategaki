@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ホーム - tategaki</title>
+    <link rel="icon" href="/favicon.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+</head>
+
+<body>
+    <div class="container fade-in">
+        <header class="header">
+            <h1 class="app-title">tategaki</h1>
+        </header>
+
+        <div id="list-tabs" class="list-tabs">
+            <!-- JSでタブ生成 -->
+        </div>
+
+        <main>
+            <div id="novel-list" class="novel-list">
+                <!-- JSでカードを動的生成 -->
+                <p>読み込み中...</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 設定やメニューを開くFAB (Floating Action Button) -->
+    <div class="fab" id="fab-menu" onclick="openAddNovelModal()">
+        <span class="material-symbols-rounded">add</span>
+    </div>
+
+    <!-- List Selection Modal -->
+    <div id="list-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">リストへ移動</div>
+            <div id="list-modal-items" class="list-select-container">
+                <!-- JSでリスト生成 -->
+            </div>
+            <button class="modal-close-btn" onclick="closeListModal()">キャンセル</button>
+        </div>
+    </div>
+
+    <!-- Add Novel Modal -->
+    <div id="add-novel-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">小説を追加</div>
+            <p class="modal-desc">なろう・カクヨムのURLを入力</p>
+            <div style="display:flex; gap:8px; align-items:stretch; margin-bottom:20px;">
+                <input type="text" id="add-novel-url" class="modal-input" placeholder="https://..."
+                    style="flex:1; margin-bottom:0;" />
+                <button class="modal-btn secondary"
+                    style="padding:0; width:52px; flex:none; display:flex; justify-content:center; align-items:center;"
+                    onclick="pasteUrl()" title="貼り付け">
+                    <span class="material-symbols-rounded">content_paste</span>
+                </button>
+            </div>
+
+            <div class="modal-label">保存先リスト</div>
+            <select id="add-novel-list" class="modal-select">
+                <!-- JSで生成 -->
+            </select>
+
+            <div class="modal-actions">
+                <button class="modal-btn secondary" onclick="closeAddNovelModal()">キャンセル</button>
+                <button class="modal-btn primary" onclick="submitAddNovel()">追加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Menu Modal -->
+    <div id="card-menu-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">操作メニュー</div>
+            <div class="list-select-item" onclick="openHomeToc()">
+                <span class="material-symbols-rounded">menu_book</span> 目次を見る
+            </div>
+            <div class="list-select-item" onclick="switchToMoveList()">
+                <span class="material-symbols-rounded">drive_file_move</span> リストへ移動
+            </div>
+            <div class="list-select-item" style="color:red;" onclick="deleteNovel()">
+                <span class="material-symbols-rounded">delete</span> 削除
+            </div>
+
+            <button class="modal-close-btn" onclick="closeCardMenuModal()">キャンセル</button>
+        </div>
+    </div>
+
+    <!-- Home TOC Panel (Bottom Sheet) -->
+    <div id="home-toc-panel" class="toc-panel">
+        <div class="panel-header">
+            <h3>目次</h3>
+            <button class="panel-close" onclick="closeHomeToc()">×</button>
+        </div>
+        <div class="panel-body" id="home-toc-list"></div>
+    </div>
+    <div id="home-panel-backdrop" class="panel-backdrop" onclick="closeHomeToc()"></div>
+
+    <!-- New List Modal -->
+    <div id="new-list-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">新しいリストを作成</div>
+            <input type="text" id="new-list-name" class="modal-input" placeholder="リスト名を入力" />
+            <div class="modal-actions">
+                <button class="modal-btn secondary" onclick="closeNewListModal()">キャンセル</button>
+                <button class="modal-btn primary" onclick="submitNewList()">作成</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/js/home.js"></script>
+</body>
+
+</html>
