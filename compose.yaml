@@ -7,7 +7,7 @@ services:
     ports:
       - "${APP_PORT:-3000}:3000"
     volumes:
-      - "${HOST_DATA_DIR:-./data}:/app/data"
+      - "${TATEGAKI_DATA_DIR:-${HOST_DATA_DIR:-./data}}:/app/data"
     environment:
       NODE_ENV: production
       PORT: 3000
