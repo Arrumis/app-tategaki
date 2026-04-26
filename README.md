@@ -6,6 +6,15 @@
 
 GitHub のコミット一覧が英語で分かりにくい場合は、[コミット履歴の日本語メモ](docs/COMMIT_HISTORY_JA.md) を見てください。
 
+## サンプル値の置き換え
+
+`.env.example` は公開用の見本です。実際に使う値は `.env.local` に書きます。
+
+- `HOST_DATA_DIR` は小説データや履歴を保存する場所へ変更します
+- `APP_PORT` は他サービスと衝突するときだけ変更します
+- `CRAWL_INTERVAL_MS` と `REQUEST_DELAY_MS` は外部サイトへのアクセス頻度なので、短くしすぎないようにします
+- 親 repo からまとめて使う場合は、`stack.service.env.local` の `GLOBAL__HOST_DATA_ROOT` や `APP_TATEGAKI__...` を使います
+
 ## 特徴
 
 - 小説家になろう / カクヨムの作品をローカル保存
