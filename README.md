@@ -55,6 +55,7 @@ docker compose --env-file .env.local up -d --build
 ```bash
 APP_PORT=3000
 HOST_DATA_DIR=./data
+TATEGAKI_DATA_DIR=./data
 TZ=Asia/Tokyo
 CRAWL_INTERVAL_MS=10800000
 REQUEST_DELAY_MS=3000
@@ -68,6 +69,8 @@ REQUEST_DELAY_MS=3000
 - `HOST_DATA_DIR`
   - 実データの保存先です
   - お気に入り、小説本文、履歴、ログを持ち運びたいときはここを見ます
+  - 親 installer から使う場合は `GLOBAL__HOST_DATA_ROOT/tategaki` が標準です
+  - HDD 直置き運用では `/mnt/sda/var/docker/tategaki` のように指定します
 - `TATEGAKI_DATA_DIR`
   - コンテナから見た保存先です
   - 通常は `HOST_DATA_DIR` と同じ意味なので、特別な理由がなければ既定値のままで構いません
@@ -106,6 +109,7 @@ REQUEST_DELAY_MS=3000
 - `.env.local`
 
 初回起動前に空ディレクトリだけ作るため、`scripts/init-data-dirs.sh` を用意しています。
+このスクリプトは `.env.local` の `TATEGAKI_DATA_DIR`、なければ `HOST_DATA_DIR` を見て保存先を作ります。
 
 ## 補助スクリプト
 
@@ -138,4 +142,6 @@ app-tategaki/
 
 - 旧 `tategaki` / `practice01` 系の混在を解消するための新正本候補
 - installer 配下への丸ごとコピー運用は前提にしない
+- 新環境の永続データ正本は `/mnt/.../var/docker/tategaki`、またはそれを指す `GLOBAL__HOST_DATA_ROOT/tategaki`
+- 旧PCで `/home/.../docker20250920/compose/tategaki/data` にデータが残っている場合は、HDD移行前に `/mnt/.../var/docker/tategaki` へコピーする
 - reverse proxy 連携は `docker-compose.traefik.example.yml` をベースに別途組み込む
