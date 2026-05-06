@@ -41,9 +41,9 @@ class BrowserManager {
     release() {
         // 使用終了通知。タイマーをセットする。
         // ※ 複数の処理が走っている場合を考慮し、単純なカウントではなく
-        // 「最後のreleaseからN分後」に閉じる戦略をとる。
+        // 「最後の解放処理から N 分後」に閉じる戦略をとる。
         // 本来は参照カウントなどが厳密だが、今回はシンプルに
-        // 「getBrowser呼出ごとにタイマー解除 -> release呼出ごとにタイマーセット」で運用する。
+        // 「ブラウザ取得ごとにタイマー解除、解放処理ごとにタイマー設定」で運用する。
         // 頻繁に呼ばれる限りタイマーはリセットされ続ける。
         
         if (this.timer) clearTimeout(this.timer);
@@ -64,16 +64,16 @@ export async function launchBrowser() {
     // 既存のコードとの互換性のため、ブラウザインスタンスを返すが、
     // 呼び出し元が browser.close() を呼ぶと全体が閉じてしまう問題がある。
     // そのため、browser.close() を無効化したプロキシを返すか、
-    // 呼び出し元で manager.release() を呼ぶ規約にする必要がある。
+    // 呼び出し元で解放処理を呼ぶ規約にする必要がある。
     
     // 今回は既存コード(manager.js)の try-finally で browser.close() している箇所を
-    // closeBrowser(browser) 関数に置き換えてもらう方が安全。
+    // closeBrowser(browser) 関数に置き換える方が安全。
     
     // しかし変更範囲を抑えるため、ここで「閉じないブラウザオブジェクト」を返す手もあるが、
-    // 結局 release() を呼ばないとタイマーが動かない。
+    // 結局、解放処理を呼ばないとタイマーが動かない。
     
     // よって、launchBrowser は manager.getBrowser() を返すが、
-    // 追加で closeBrowser という関数もexportし、そちらを使ってもらう形にリファクタする。
+    // 追加で closeBrowser という関数も公開し、そちらを使う形に整理する。
     
     return await manager.getBrowser();
 }
@@ -100,14 +100,14 @@ export async function downloadImage(url, saveDir, filename) {
         // ディレクトリ確保
         await fs.mkdir(saveDir, { recursive: true });
 
-        // fetchで取得
+        // fetch で取得
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
 
         const arrayBuffer = await response.arrayBuffer();
         const headers = response.headers;
 
-        // 拡張子の補正が必要ならここで行うが、今回はfilenameを信頼する
+        // 拡張子の補正が必要ならここで行うが、今回は filename を信頼する
         const savePath = path.join(saveDir, filename);
         await fs.writeFile(savePath, Buffer.from(arrayBuffer));
 

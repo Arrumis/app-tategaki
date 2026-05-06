@@ -22,7 +22,7 @@ export async function checkInfoViaApi(novelId) {
         // lim=1: 1件のみ
         const url = `https://api.syosetu.com/novelapi/api/?out=json&of=t-ga-nu-w&ncode=${novelId}&lim=1`;
 
-        // Custom User-Agent to be polite
+        // 相手サイトに配慮して独自の User-Agent を指定する
         const headers = { 'User-Agent': 'TategakiCrawler/1.0' };
 
         const res = await fetch(url, { headers });
@@ -144,7 +144,7 @@ export async function getNovelInfo(page, novelId) {
                 // なろうは必ずURLに番号が入るので、そこを信じる。
                 if (epNo === 0) {
                     console.warn(`[Narou] Failed to parse epNo from path: ${path}`);
-                    continue; // Skip invalid
+                    continue; // 不正な値は飛ばす
                 }
 
                 const dateText = await node.locator('.p-eplist__update').innerText().catch(() => '');

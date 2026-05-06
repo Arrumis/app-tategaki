@@ -1,6 +1,6 @@
 import { crawlNovel } from './manager.js';
 
-// CLIエントリーポイント
+// コマンドライン実行の入口
 const [, , siteType, novelId] = process.argv;
 
 if (!siteType || !novelId) {

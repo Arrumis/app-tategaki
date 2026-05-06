@@ -40,36 +40,36 @@ export async function initUI() {
 
     setState({ siteType, novelId, epNo });
 
-    // Global Handlers
+    // 全体で使う操作
     window.closeSettings = closeAllPanels;
     window.closeToc = closeAllPanels;
     window.closeAllPanels = closeAllPanels;
     window.goToEp = goToEp;
 
-    // Load Settings
+    // 設定読み込み
     core.loadSettings();
     updateSettingsUI();
 
-    // Event Listeners
+    // イベント登録
     setupInteractions();
 
-    // Load Content
+    // 本文読み込み
     try {
         await core.loadEpisode(scroll);
-    } catch (e) { /* handled in core */ }
+    } catch (e) { /* 中核処理側で処理済み */ }
 
-    // Load Info (Parallel)
+    // 小説情報を並行読み込み
     core.loadNovelInfo().then(() => {
-        // updateToc() is removed
+        // updateToc() は削除済み
         updateNavButtons();
     });
 
-    // Scroll Watch
+    // スクロール監視
     els.container.addEventListener('scroll', checkScrollEdges);
     window.addEventListener('resize', checkScrollEdges);
     setTimeout(checkScrollEdges, 200);
 
-    // Auto Save on Leave
+    // 離脱時に自動保存
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
             if (state.scrollTimer) clearTimeout(state.scrollTimer);
@@ -78,10 +78,10 @@ export async function initUI() {
     });
 }
 
-// --- Interaction ---
+// --- 操作入力 ---
 
 function setupInteractions() {
-    // Single Click Handler for Container (Supports native scroll/swipe)
+    // コンテナ全体のクリック処理
     document.addEventListener('click', (e) => {
         // コンテナ外（ヘッダー等は存在しないが念のため）や、インタラクティブ要素は無視
         if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.list-tabs')) return;
@@ -118,11 +118,11 @@ function setupInteractions() {
         }
     });
 
-    // Wheel
+    // ホイール操作
     window.addEventListener('wheel', (e) => {
         if (els.menu.classList.contains('active')) return;
         if (els.settingsPanel.classList.contains('active')) return;
-        // tocPanel check removed
+        // 目次パネル判定は削除済み
 
         if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
             const direction = e.deltaY > 0 ? -1 : 1;
@@ -130,20 +130,20 @@ function setupInteractions() {
         }
     }, { passive: true });
 
-    // Buttons
+    // ボタン
     if (els.btnNextEp) els.btnNextEp.onclick = () => goToEp(state.epNo + 1);
     if (els.btnPrevEp) els.btnPrevEp.onclick = () => goToEp(state.epNo - 1);
     if (els.btnNextPage) els.btnNextPage.onclick = () => moveNextPage();
     if (els.btnPrevPage) els.btnPrevPage.onclick = () => movePrevPage();
 
-    // Panels
+    // パネル
     const btnSettings = document.getElementById('btn-settings');
     if (btnSettings) btnSettings.onclick = openSettings;
 
     const btnToc = document.getElementById('btn-toc');
     if (btnToc) btnToc.onclick = openToc;
 
-    // Bookmark
+    // しおり
     const btnBookmark = document.getElementById('btn-bookmark');
     if (btnBookmark) {
         btnBookmark.onclick = async () => {
@@ -156,13 +156,13 @@ function setupInteractions() {
         };
     }
 
-    // Settings
+    // 設定
     const ctrlTheme = document.getElementById('ctrl-theme');
     if (ctrlTheme) {
         ctrlTheme.onclick = (e) => {
             if (e.target.tagName !== 'BUTTON') return;
             setState({ theme: e.target.dataset.val });
-            core.applyStyle(); // re-apply
+            core.applyStyle(); // 再反映
             core.saveSettings();
             updateSettingsUI();
         };
@@ -192,7 +192,7 @@ function setupInteractions() {
     }
 }
 
-// --- Navigation ---
+// --- 移動 ---
 
 function moveNextPage() {
     const scrollEnd = els.container.scrollWidth - els.container.clientWidth;
@@ -206,11 +206,8 @@ function moveNextPage() {
             showToast('最新話です');
         }
     } else {
-        scrollByPage(-1); // Left is negative in RTL-like scroll (but here we use negative for left)
-        // Note: tategaki CSS usually sets direction: rtl or writing-mode: vertical-rl
-        // If writing-mode: vertical-rl, scrollLeft is usually negative or 0 at start?
-        // Let's stick to existing logic:
-        // scrollByAmount uses `left`. 
+        scrollByPage(-1); // 縦書き右開きの左方向へ進める
+        // 縦書き表示では scrollLeft の扱いがブラウザごとに揺れるため、既存の移動量指定を維持する。
     }
 }
 
@@ -247,7 +244,7 @@ function checkScrollEdges() {
     els.btnPrevPage.disabled = isAtStart;
     els.btnNextPage.disabled = isAtEnd;
 
-    // Auto Save History
+    // 履歴を自動保存
     if (state.scrollTimer) clearTimeout(state.scrollTimer);
     const timer = setTimeout(() => {
         core.saveHistory(els.container.scrollLeft);
@@ -260,7 +257,7 @@ function goToEp(nextEpNo) {
     location.href = `?site=${state.siteType}&id=${state.novelId}&ep=${nextEpNo}`;
 }
 
-// --- UI Updates ---
+// --- 画面更新 ---
 
 function updateSettingsUI() {
     document.querySelectorAll('.theme-btn').forEach(b => {
@@ -286,7 +283,7 @@ function updateNavButtons() {
 
 
 
-// --- Panels ---
+// --- パネル ---
 
 function openSettings() {
     closeMenu();
@@ -296,15 +293,15 @@ function openSettings() {
 
 function openToc() {
     closeMenu();
-    // Navigate to dedicated TOC page
-    // Pass current ep to highlight it
+    // 専用の目次ページへ移動
+    // 現在の話を強調表示するために渡す
     const url = `/toc.html?site=${state.siteType}&id=${state.novelId}&ep=${state.epNo}`;
     window.location.href = url;
 }
 
 function closeAllPanels() {
     els.settingsPanel.classList.remove('active');
-    // els.tocPanel removed
+    // els.tocPanel は削除済み
     els.panelBackdrop.classList.remove('active');
 }
 

@@ -8,7 +8,7 @@
     <title>読書モード - tategaki</title>
     <link rel="icon" href="/favicon.png">
 
-    <!-- Google Fonts -->
+    <!-- Google フォント -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&display=swap"
@@ -20,7 +20,7 @@
 </head>
 
 <body class="no-scroll">
-    <!-- Viewer Container: 縦書きスクロール領域 -->
+    <!-- 縦書きスクロール領域 -->
     <div id="viewer-container">
         <div id="content-layer">
             <div id="novel-content">
@@ -29,17 +29,17 @@
         </div>
     </div>
 
-    <!-- Reader Interaction Zones (One-tap action) -->
+    <!-- 読書画面のタップ操作領域 -->
     <div id="tap-zone-next" title="次ページ"></div>
     <div id="tap-zone-prev" title="前ページ"></div>
 
-    <!-- UI Layer: タップ操作やメニュー -->
+    <!-- 操作用レイヤー -->
     <div id="ui-layer">
-        <!-- Center Tap Filter: 中央タップ検知用 -->
+        <!-- 中央タップ検知用 -->
         <div id="tap-zone-center"></div>
-        <!-- Prev/Next Tap Zone: 左右はJSで判定するか、全面のclickイベントから座標計算する -->
+        <!-- 前後ページ用タップ領域 -->
 
-        <!-- Menu -->
+        <!-- メニュー -->
         <div id="menu-overlay" class="menu-overlay">
             <div class="menu-grid">
                 <!-- 上段: ナビゲーション (右開き: 進む=左, 戻る=右) -->
@@ -90,7 +90,7 @@
         </div>
     </div>
 
-    <!-- Settings Panel -->
+    <!-- 設定パネル -->
     <div id="settings-panel" class="settings-panel">
         <div class="panel-header">
             <h3>設定</h3>
@@ -126,13 +126,13 @@
         </div>
     </div>
 
-    <!-- TOC Panel -->
-    <!-- TOC Panel Removed -->
+    <!-- 目次パネル -->
+    <!-- 目次パネルは専用ページへ移動済み -->
 
-    <!-- Backdrop for panels -->
+    <!-- パネル背景 -->
     <div id="panel-backdrop" class="panel-backdrop" onclick="closeAllPanels()"></div>
 
-    <!-- Toast Notification -->
+    <!-- 通知表示 -->
     <div id="toast" class="toast"></div>
 
     <script type="module" src="/js/viewer.js"></script>

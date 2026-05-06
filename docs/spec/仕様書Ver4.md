@@ -19,7 +19,7 @@
 | **タップ・クリック操作** | 画面両端のタップでページめくり（横スクロール制御）。 |
 | **データ永続化** | 元サイト消失時も、DL済み本文・画像をサーバーから表示。 |
 
-## 4. UI/UXデザイン
+## 4. 画面と使い勝手デザイン
 ### (1) 視覚効果
 - **フォント**: **游明朝 (Yu Mincho)**。
 - **背景/文字色**: クリーム色、淡いグレー、夜間モード（黒背景）などの切り替え。
@@ -38,11 +38,11 @@
 3. **[読書画面]**: 本文、タップ操作によるページ移動。
 4. **[設定画面]**: ID切り替え、フォントサイズ、行間、背景色、ボタン表示設定。
 
-## 6. 技術スタック (Technical Stack)
+## 6. 技術スタック （技術構成）
 - **Frontend**: HTML5, CSS3, Vanilla JS (タップ検知、スクロール制御)
 - **Backend**: Node.js (Express)
 - **Crawler**: Playwright (画像ダウンローダー機能付き)
-- **Data storage**: 
+- **Data storage**:
     - 作品メタ（共通）: `data/novels/[site_type]/[novel_id]/info.json`
     - 本文/画像（共通）: `data/novels/[site_type]/[novel_id]/[ep_no].json`, `data/novels/[site_type]/[novel_id]/images/`
     - リスト/しおり（ID別）: `data/favs/[list_id].json`

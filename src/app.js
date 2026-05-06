@@ -8,7 +8,7 @@ import * as crawlerManager from './crawler/manager.js';
 
 const app = express();
 
-// Middleware
+// 共通処理
 app.set('etag', false);
 app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -21,18 +21,18 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.static('public'));
 
-// Routes
+// 経路設定
 app.use('/api', apiRouter);
 
-// Health check
+// 稼働確認
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date() });
 });
 
-// Start Server
+// サーバー起動
 app.listen(config.port, () => {
-    console.log(`Server is running at http://localhost:${config.port}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`サーバー起動: http://localhost:${config.port}`);
+    console.log(`実行環境: ${process.env.NODE_ENV || 'development'}`);
 
     // 中断されたダウンロードの再開
     crawlerManager.resumeInterruptedDownloads().catch(err => {

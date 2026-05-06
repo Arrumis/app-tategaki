@@ -543,10 +543,10 @@ export async function getInterruptedNovels() {
     return interrupted;
 }
 
-// Retrofit for compatibility if needed, or just remove export if unused
+// 互換性が必要な場合のために残す。未使用なら将来削除してよい。
 export async function recoverDownloadingStatus() {
-    // Deprecated: Now handled by resumeInterruptedDownloads in app.js
-    // We do nothing here to preserve the 'is_downloading' state for the resumer.
+    // 現在は app.js の resumeInterruptedDownloads で処理する。
+    // 再開処理のために is_downloading 状態を残すので、ここでは何もしない。
     return;
 }
 

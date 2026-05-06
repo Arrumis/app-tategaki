@@ -2,7 +2,7 @@
 import { state, setState } from './home-state.js';
 import * as api from '../utils/api.js';
 
-// DOM Elements cache
+// 画面要素の保持
 const els = {
     listContainer: document.getElementById('novel-list'),
     tabsContainer: document.getElementById('list-tabs'),
@@ -19,23 +19,23 @@ const els = {
     homePanelBackdrop: document.getElementById('home-panel-backdrop')
 };
 
-// --- Initialization ---
+// --- 初期化 ---
 
 export async function initUI() {
     setupGlobalHandlers();
 
-    // Theme
+    // テーマ
     const saved = localStorage.getItem('tategaki_settings');
     if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.theme) document.body.setAttribute('data-theme', parsed.theme);
     }
 
-    // Data Load
+    // データ読み込み
     await loadUserLists();
     await loadFavList();
 
-    // Auto Reload on Focus (Sync across devices)
+    // 画面復帰時に自動再読み込み
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
             // console.log('[Home] Tab active, reloading list...');
@@ -44,7 +44,7 @@ export async function initUI() {
         }
     });
 
-    // Auto Reload on Back/Forward Cache
+    // 戻る・進む後のキャッシュ復帰時に再読み込み
     window.addEventListener('pageshow', (event) => {
         if (event.persisted) {
             // console.log('[Home] Restored from BFCache, reloading list...');
@@ -55,8 +55,8 @@ export async function initUI() {
 }
 
 function setupGlobalHandlers() {
-    // Window functions for HTML onclick attributes
-    // (Module scope is not global, so we must assign to window explicitly if we keep inline onclicks)
+    // HTML の onclick 属性から呼ぶ関数を window へ登録
+    // モジュール内の関数は自動でグローバルにならないため、明示的に登録する
     window.closeListModal = closeListModal;
     window.closeNewListModal = closeNewListModal;
     window.submitNewList = submitNewList;
@@ -71,7 +71,7 @@ function setupGlobalHandlers() {
     window.pasteUrl = pasteUrl;
 }
 
-// --- Data Loading ---
+// --- データ読み込み ---
 
 async function pasteUrl() {
     try {
@@ -82,9 +82,7 @@ async function pasteUrl() {
     } catch (e) {
         console.error('Paste failed:', e);
         els.addNovelUrl.focus();
-        // Fallback: execCommand is deprecated but might work if readText fails in some contexts, 
-        // though usually readText is better. If readText fails, it's often a permission issue.
-        // Just focusing the input is a safe fallback so user can Ctrl+V.
+        // クリップボード読み取りに失敗した場合は、入力欄へフォーカスして手動貼り付けできるようにする。
     }
 }
 
@@ -93,7 +91,7 @@ export async function loadUserLists() {
         const data = await api.get(`/api/users/${state.userId}/lists`);
         setState({ userLists: data.lists });
 
-        // Validation
+        // 入力確認
         if (state.listId !== 'default' && !data.lists.some(l => l.id === state.listId)) {
             setState({ listId: 'default' });
         }
@@ -111,7 +109,7 @@ export async function loadFavList() {
         setState({ novels: data.novels });
         renderList();
 
-        // Polling check
+        // 巡回状態の確認
         if (data.novels.some(n => n.is_downloading)) {
             if (window._pollingId) clearTimeout(window._pollingId);
             window._pollingId = setTimeout(() => {
@@ -124,7 +122,7 @@ export async function loadFavList() {
     }
 }
 
-// --- Rendering ---
+// --- 表示生成 ---
 
 function renderTabs() {
     els.tabsContainer.innerHTML = '';
@@ -143,14 +141,14 @@ function renderTabs() {
     addBtn.onclick = openNewListModal;
     els.tabsContainer.appendChild(addBtn);
 
-    // Delete Button (Only for custom lists)
+    // 削除ボタン（独自リストのみ）
     if (state.listId !== 'default') {
         const delBtn = document.createElement('button');
         delBtn.className = 'tab-btn-add';
         delBtn.innerHTML = '<span class="material-symbols-rounded">delete</span>';
         delBtn.title = 'このリストを削除';
         delBtn.style.marginLeft = '8px';
-        delBtn.style.color = '#ff4081'; // Attention color
+        delBtn.style.color = '#ff4081'; // 注意色
         delBtn.style.borderColor = '#ff4081';
         delBtn.onclick = deleteCurrentList;
         els.tabsContainer.appendChild(delBtn);
@@ -176,7 +174,7 @@ function renderList() {
 function createNovelCard(novel) {
     const card = document.createElement('div');
 
-    // Downloading State
+    // ダウンロード中の表示
     if (novel.is_downloading) {
         // [Debug] 状態確認用ログ
         console.log('[Debug] Card:', novel.title, 'is_downloading:', novel.is_downloading, 'total:', novel.total_episodes, 'type:', typeof novel.total_episodes);
@@ -202,7 +200,7 @@ function createNovelCard(novel) {
             <div class="card-menu-btn" title="メニュー"><span class="material-symbols-rounded">more_vert</span></div>
         `;
     } else {
-        // Normal State
+        // 通常表示
         card.className = 'novel-card';
         let resumeUrl = `/reader.html?site=${novel.site_type}&id=${novel.novel_id}&ep=1`;
         let progressText = `未読`;
@@ -222,7 +220,7 @@ function createNovelCard(novel) {
 
         card.onclick = () => window.location.href = resumeUrl;
 
-        // Badge
+        // バッジ
         let newBadgeHtml = '';
         if ((novel.total_episodes || 0) > currentEp) {
             newBadgeHtml = `<div class="card-badge-new" title="未読があります">NEW</div>`;
@@ -230,7 +228,7 @@ function createNovelCard(novel) {
 
         const dateStr = new Date(novel.last_update).toLocaleDateString('ja-JP');
 
-        // Bookmark Btn
+        // しおりボタン
         let bookmarkBtnHtml = '';
         if (novel.bookmark) {
             bookmarkBtnHtml = `
@@ -263,7 +261,7 @@ function createNovelCard(novel) {
         }
     }
 
-    // Attach Menu Handler
+    // メニュー操作を登録
     const menuBtn = card.querySelector('.card-menu-btn');
     if (menuBtn) {
         menuBtn.onclick = (e) => {
@@ -276,12 +274,12 @@ function createNovelCard(novel) {
 }
 
 
-// --- Actions ---
+// --- 操作 ---
 
 async function switchList(id) {
     if (state.listId === id) return;
     setState({ listId: id });
-    await loadUserLists(); // Highlight update
+    await loadUserLists(); // 選択状態を更新
     await loadFavList();
 }
 
@@ -373,7 +371,7 @@ async function submitAddNovel() {
     }
 }
 
-// --- Menu Actions ---
+// --- メニュー操作 ---
 
 function openCardMenu(novel) {
     setState({ targetNovel: novel });
@@ -408,7 +406,7 @@ function switchToMoveList() {
     if (state.targetNovel) openListModal(state.targetNovel);
 }
 
-// --- Move Modal ---
+// --- 移動モーダル ---
 
 function openListModal(novel) {
     setState({ targetNovel: novel });
@@ -455,7 +453,7 @@ async function moveNovelToList(targetListId) {
     }
 }
 
-// --- TOC Modal ---
+// --- 目次モーダル ---
 
 async function openHomeToc() {
     const novel = state.targetNovel;

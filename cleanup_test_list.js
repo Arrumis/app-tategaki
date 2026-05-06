@@ -30,7 +30,7 @@ async function main() {
         }
     }
 
-    // Clear the list
+    // リストを空にする
     list.novels = [];
     await fs.writeFile(LIST_FILE, JSON.stringify(list, null, 2), 'utf-8');
     console.log('List cleared.');

@@ -8,7 +8,7 @@ export const state = {
     epNo: 1,
     fontSize: 18,
     lineHeight: 'normal',
-    theme: 'light', // light, dark, sepia
+    theme: 'light', // 明色、暗色、セピア
     novelInfo: null,
     currentEpTitle: '',
     scrollTimer: null

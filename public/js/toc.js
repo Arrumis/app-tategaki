@@ -1,7 +1,7 @@
 import * as api from './utils/api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Theme Loading
+    // テーマ読み込み
     const saved = localStorage.getItem('tategaki_settings');
     if (saved) {
         try {
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Back Button Logic
+    // 戻るボタン処理
     const btnBack = document.getElementById('btn-back');
     btnBack.onclick = () => {
         if (currentEp) {
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 function renderToc(info, currentEpVal) {
     const currentEp = parseInt(currentEpVal || '0', 10);
 
-    // Header Info
+    // ヘッダー情報
     document.getElementById('header-title').textContent = info.title;
     document.getElementById('novel-title').textContent = info.title;
     document.getElementById('novel-author').textContent = `作者: ${info.author || '不明'}`;
@@ -60,7 +60,7 @@ function renderToc(info, currentEpVal) {
         list.innerHTML = '<p style="padding:20px; text-align:center;">目次がありません</p>';
     } else {
         info.chapters.forEach(ch => {
-            // Chapter Title
+            // 章タイトル
             if (ch.chapter_title && ch.chapter_title !== '本編') {
                 const h3 = document.createElement('div');
                 h3.className = 'chapter-title';
@@ -76,7 +76,7 @@ function renderToc(info, currentEpVal) {
                 list.appendChild(h3);
             }
 
-            // Episodes
+            // 各話
             ch.episodes.forEach(ep => {
                 const item = document.createElement('div');
                 item.className = 'toc-item';
@@ -87,15 +87,15 @@ function renderToc(info, currentEpVal) {
 
                 if (ep.ep_no === currentEp) {
                     item.className += ' current';
-                    // item.scrollIntoView will be called later
+                    // あとでこの項目までスクロールする
                 }
 
-                // Content
+                // 表示内容
                 const titleSpan = document.createElement('span');
                 titleSpan.textContent = `第${ep.ep_no}話 ${ep.ep_title}`;
                 item.appendChild(titleSpan);
 
-                // Date
+                // 日付
                 if (ep.post_date) {
                     const dateSpan = document.createElement('span');
                     dateSpan.style.fontSize = '0.75em';
@@ -103,11 +103,11 @@ function renderToc(info, currentEpVal) {
                     dateSpan.style.flexShrink = '0';
 
                     let dateText = ep.post_date;
-                    // Check if it's a valid date string (e.g. ISO format or standard date)
-                    // Custom strings like "2026/01/19 10:08 （改）" might fail Date.parse, so keep them as is.
+                    // 標準的な日付文字列か確認する。
+                    // 「2026/01/19 10:08 （改）」のような独自表記は変換に失敗することがあるため、そのまま表示する。
                     const d = new Date(ep.post_date);
                     if (!isNaN(d.getTime()) && !ep.post_date.includes('（')) {
-                        // Valid date & simple string -> Format it
+                        // 標準的な日付なら整形する
                         dateText = d.toLocaleString('ja-JP', {
                             year: 'numeric',
                             month: '2-digit',
@@ -130,11 +130,11 @@ function renderToc(info, currentEpVal) {
         });
     }
 
-    // Show Content
+    // 本文表示
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').classList.remove('hidden');
 
-    // Scroll to Current
+    // 現在の話へスクロール
     setTimeout(() => {
         const curr = document.querySelector('.toc-item.current');
         if (curr) {

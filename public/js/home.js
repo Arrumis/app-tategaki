@@ -4,7 +4,7 @@
  */
 import { initUI } from './modules/home-ui.js';
 
-// Initialize Application
+// アプリ初期化
 document.addEventListener('DOMContentLoaded', () => {
     initUI();
 });

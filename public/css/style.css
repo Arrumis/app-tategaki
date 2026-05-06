@@ -1,6 +1,6 @@
-/* Design Tokens */
+/* デザイン変数 */
 :root {
-    /* Colors - Paper Theme (Default) */
+    /* 色 - 紙テーマ（既定） */
     --c-bg: #F7F5EB;
     /* 優しいクリーム色 */
     --c-text: #2C2C2C;
@@ -10,19 +10,19 @@
     --c-border: #E0DDCF;
     --c-overlay: rgba(255, 255, 255, 0.95);
 
-    /* Dimensions */
+    /* 寸法 */
     --header-height: 60px;
     --viewer-padding-y: 5vh;
     --viewer-padding-x: 5vw;
 
-    /* Typography */
+    /* 文字設定 */
     --font-serif: "Shippori Mincho", "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif;
     --viewer-line-height: 1.8;
     --viewer-paragraph-spacing: 1.5em;
     /* 改行幅（段落間） */
 }
 
-/* Dark Theme */
+/* 暗色テーマ */
 [data-theme="dark"] {
     --c-bg: #1A1B1E;
     --c-text: #C8C8C8;
@@ -31,7 +31,7 @@
     --c-overlay: rgba(26, 27, 30, 0.95);
 }
 
-/* Sepia Theme */
+/* セピアテーマ */
 [data-theme="sepia"] {
     --c-bg: #f4ecd8;
     --c-text: #5b4636;
@@ -39,7 +39,7 @@
     --c-overlay: rgba(244, 236, 216, 0.95);
 }
 
-/* Reset & Base */
+/* 初期化と基本設定 */
 *,
 *::before,
 *::after {
@@ -57,7 +57,7 @@ body {
     width: 100%;
     min-height: 100vh;
     min-height: 100dvh;
-    /* Mobile fix */
+    /* モバイル向け補正 */
     transition: background-color 0.3s, color 0.3s;
 }
 
@@ -65,7 +65,7 @@ body.no-scroll {
     overflow: hidden;
     height: 100vh;
     height: 100dvh;
-    /* Mobile fix */
+    /* モバイル向け補正 */
 }
 
 a {
@@ -73,7 +73,7 @@ a {
     text-decoration: none;
 }
 
-/* Utilities */
+/* 補助クラス */
 .hidden {
     display: none !important;
 }
@@ -92,7 +92,7 @@ a {
     }
 }
 
-/* --- Reader Specific (Step 4-3先取り) --- */
+/* --- 読書画面専用 --- */
 #viewer-container {
     width: 100%;
     height: 100%;
@@ -102,11 +102,11 @@ a {
     writing-mode: vertical-rl;
     -webkit-writing-mode: vertical-rl;
 
-    /* Scroll Snap */
+    /* スクロール吸着 */
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
 
-    /* Hide Scrollbar */
+    /* スクロールバーを隠す */
     scrollbar-width: none;
     /* Firefox */
     -ms-overflow-style: none;
@@ -123,7 +123,7 @@ a {
     /* 上は5vh, 下はスマホのアドレスバー対策で多め(10vh + 30px)にとる */
     padding: 5vh var(--viewer-padding-x) calc(10vh + 40px) var(--viewer-padding-x);
 
-    /* Column Layout: 画面幅に合わせて段組みする */
+    /* 段組み: 画面幅に合わせる */
     column-width: 90vh;
     /* 縦書きなのでwidthが高さに相当するが、column-widthは「段の幅」 */
     column-gap: 5vw;
@@ -140,7 +140,7 @@ a {
     /* 縦書きなのでmargin-leftが段落下の余白になる */
 }
 
-/* UI Layer */
+/* 操作用レイヤー */
 #ui-layer {
     position: fixed;
     top: 0;
@@ -152,7 +152,7 @@ a {
     z-index: 100;
 }
 
-/* Menu Overlay */
+/* メニュー重ね表示 */
 .menu-overlay {
     position: fixed;
     bottom: 0;
@@ -183,7 +183,7 @@ a {
 }
 
 /* 下段（6枚目以降）の配置調整 */
-/* Tap Zones for 1-Action Page Turning */
+/* ワンタップページ送り領域 */
 #tap-zone-next,
 #tap-zone-prev {
     position: fixed;
@@ -206,7 +206,7 @@ a {
 
 /* 右側が前ページ */
 
-/* UI Layer Improvements */
+/* 操作用レイヤーの調整 */
 #ui-layer {
     position: fixed;
     top: 0;
@@ -226,7 +226,7 @@ a {
     pointer-events: none;
 }
 
-/* --- Menu Grid & Buttons/* 下段（6枚目以降）の配置調整 */
+/* 下段（6枚目以降）の配置調整 */
 #btn-bookmark,
 #btn-home,
 #btn-settings {
@@ -292,7 +292,7 @@ a {
     cursor: not-allowed;
 }
 
-/* Toast Notification */
+/* 通知表示 */
 .toast {
     position: fixed;
     top: 50%;
@@ -337,7 +337,7 @@ a {
     letter-spacing: 0.1em;
 }
 
-/* List Tabs */
+/* リストタブ */
 .list-tabs {
     display: flex;
     overflow-x: auto;
@@ -418,12 +418,12 @@ a {
     /* Badge用 */
     overflow: hidden;
 
-    /* Layout */
+    /* 配置 */
     flex-direction: row;
     gap: 12px;
 }
 
-/* NEW Badge */
+/* 新着バッジ */
 .card-badge-new {
     position: absolute;
     top: 12px;
@@ -542,7 +542,7 @@ a {
     opacity: 0.6;
 }
 
-/* Floating Action Button (for Settings/Crawler trigger) */
+/* 浮動操作ボタン */
 .fab {
     position: fixed;
     bottom: 20px;
@@ -561,7 +561,7 @@ a {
     font-size: 1.5rem;
 }
 
-/* Card Menu Button */
+/* カードメニューボタン */
 .card-menu-btn {
     position: absolute;
     top: 4px;
@@ -593,7 +593,7 @@ a {
     font-size: 20px;
 }
 
-/* Modal Overlay */
+/* モーダル重ね表示 */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -669,7 +669,7 @@ a {
     margin-top: 8px;
 }
 
-/* Modal Inputs & Actions */
+/* モーダル入力と操作 */
 .modal-input {
     width: 100%;
     padding: 12px;
@@ -731,7 +731,7 @@ a {
     color: var(--c-text);
 }
 
-/* Panels (Settings, TOC) */
+/* パネル（設定、目次） */
 .settings-panel,
 .toc-panel {
     position: fixed;
@@ -739,9 +739,9 @@ a {
     left: 0;
     width: 100%;
     background: var(--c-surface);
-    /* Panel Background Fixes (Prevent transparency) */
+    /* パネル背景の透過防止 */
     background-color: #fff;
-    /* Light default */
+    /* 明色の既定 */
     border-top-left-radius: 16px;
     border-top-right-radius: 16px;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
@@ -802,7 +802,7 @@ a {
     pointer-events: auto;
 }
 
-/* Settings Controls */
+/* 設定操作 */
 .setting-item {
     margin-bottom: 24px;
 }
@@ -840,7 +840,7 @@ a {
     color: #fff;
 }
 
-/* Theme Selector */
+/* テーマ選択 */
 .theme-selector {
     display: flex;
     gap: 12px;
@@ -875,7 +875,7 @@ a {
     color: #ccc;
 }
 
-/* TOC List */
+/* 目次リスト */
 .toc-item {
     padding: 12px 0;
     border-bottom: 1px solid var(--c-border);

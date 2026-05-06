@@ -6,7 +6,7 @@ import listsRoutes from './v1/lists.js';
 
 const router = express.Router();
 
-// v1 Routes
+// バージョン1の経路
 // 既存のフロントエンド実装 (/api/...) とパスを合わせるため、
 // app.js で /api にマウントした上で、ここでのパス定義を調整する。
 

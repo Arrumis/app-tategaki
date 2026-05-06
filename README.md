@@ -1,45 +1,9 @@
 # app-tategaki
 
-縦書きで Web 小説を読むためのセルフホスト型リーダーです。`app-tategaki` は GitHub 再編に向けた新しい正本候補で、PC 固有パスや運用データを repo から切り離せる構成にしています。
+Web 小説を縦書きで読むためのセルフホスト型リーダーです。
+小説データ、しおり、履歴、ログを指定した保存先へ置けます。
 
-## 日本語メモ
-
-GitHub のコミット一覧が英語で分かりにくい場合は、[コミット履歴の日本語メモ](docs/COMMIT_HISTORY_JA.md) を見てください。
-
-## サンプル値の置き換え
-
-`.env.example` は公開用の見本です。実際に使う値は `.env.local` に書きます。
-
-- `HOST_DATA_DIR` は小説データや履歴を保存する場所へ変更します
-- `APP_PORT` は他サービスと衝突するときだけ変更します
-- `CRAWL_INTERVAL_MS` と `REQUEST_DELAY_MS` は外部サイトへのアクセス頻度なので、短くしすぎないようにします
-- 親 repo からまとめて使う場合は、`stack.service.env.local` の `GLOBAL__HOST_DATA_ROOT` や `APP_TATEGAKI__...` を使います
-
-## 特徴
-
-- 小説家になろう / カクヨムの作品をローカル保存
-- ブラウザで縦書き読書
-- お気に入りリスト、しおり、履歴
-- Playwright ベースのクローラー
-- Docker Compose ですぐ起動可能
-
-## 目標構成
-
-- アプリコード、Compose、初期化スクリプトだけを Git 管理する
-- 実データは `HOST_DATA_DIR` に保存する
-- `/home/...` のような絶対パスに依存しない
-
-## 必要要件
-
-- Docker Engine
-- Docker Compose v2
-
-ローカル開発のみ行う場合は以下も必要です。
-
-- Node.js 18 以上
-- npm
-
-## Docker で起動
+## 使い方
 
 ```bash
 cp .env.example .env.local
@@ -47,39 +11,46 @@ cp .env.example .env.local
 docker compose --env-file .env.local up -d --build
 ```
 
-ブラウザでは `http://localhost:3000` にアクセスします。  
-ポートを変えたい場合は `.env.local` の `APP_PORT` を変更してください。
+ブラウザで開く画面:
 
-### `.env.local` の例
+- `http://localhost:3000`
 
-```bash
-APP_PORT=3000
-HOST_DATA_DIR=./data
-TATEGAKI_DATA_DIR=./data
-TZ=Asia/Tokyo
-CRAWL_INTERVAL_MS=10800000
-REQUEST_DELAY_MS=3000
-```
+## 変更する値
 
-各項目の意味は次の通りです。
+`.env.example` は公開用の見本です。実際の値は `.env.local` に書きます。
 
-- `APP_PORT`
-  - ブラウザから開くポートです
-  - reverse proxy 配下でも、最終的にはこのローカルポートへ流します
-- `HOST_DATA_DIR`
-  - 実データの保存先です
-  - お気に入り、小説本文、履歴、ログを持ち運びたいときはここを見ます
-  - 親 installer から使う場合は `GLOBAL__HOST_DATA_ROOT/tategaki` が標準です
-  - HDD 直置き運用では `/mnt/sda/var/docker/tategaki` のように指定します
-- `TATEGAKI_DATA_DIR`
-  - コンテナから見た保存先です
-  - 通常は `HOST_DATA_DIR` と同じ意味なので、特別な理由がなければ既定値のままで構いません
-- `CRAWL_INTERVAL_MS`
-  - 定期巡回の間隔です
-  - `10800000` は 3 時間です
-- `REQUEST_DELAY_MS`
-  - 外部サイトへ送る各リクエストの待ち時間です
-  - `3000` は 3 秒です
+- `HOST_DATA_DIR`: 小説データや履歴を保存する場所です。
+- `APP_PORT`: ブラウザから開くポートです。他サービスと重なるときだけ変えます。
+- `CRAWL_INTERVAL_MS`: 定期巡回の間隔です。短くしすぎないようにします。
+- `REQUEST_DELAY_MS`: 外部サイトへアクセスする間隔です。短くしすぎないようにします。
+- `APP_TATEGAKI__...`: 親リポジトリからまとめて設定するときに使います。
+
+## 機能
+
+- 小説家になろう、カクヨムの作品をローカル保存
+- ブラウザで縦書き読書
+- お気に入りリスト
+- しおりと閲覧履歴
+- 定期巡回
+
+## データ
+
+GitHub に上げるもの:
+
+- `compose.yaml`
+- `.env.example`
+- `scripts/`
+- `public/`
+- `src/`
+- `README.md`
+
+GitHub に上げないもの:
+
+- `.env.local`
+- `data/favs/`
+- `data/novels/`
+- `data/logs/`
+- `data/users/`
 
 ## ローカル開発
 
@@ -89,59 +60,21 @@ npx playwright install chromium
 node src/app.js
 ```
 
-必要に応じて以下を設定できます。
-
-```bash
-PORT=3000
-DATA_DIR=./data
-CRAWL_INTERVAL_MS=10800000
-REQUEST_DELAY_MS=3000
-```
-
-## データの扱い
-
-以下は Git 管理しません。
-
-- `data/favs/`
-- `data/novels/`
-- `data/logs/`
-- `data/users/`
-- `.env.local`
-
-初回起動前に空ディレクトリだけ作るため、`scripts/init-data-dirs.sh` を用意しています。
-このスクリプトは `.env.local` の `TATEGAKI_DATA_DIR`、なければ `HOST_DATA_DIR` を見て保存先を作ります。
-
 ## 補助スクリプト
 
-- `check_orphans.js`
-  - `DATA_DIR` を指定して孤児データを確認します
-- `cleanup_test_list.js`
-  - `DATA_DIR` と `LIST_ID` を指定してテスト用リストを掃除します
-
-例:
+孤立データを確認します。
 
 ```bash
 DATA_DIR=./data node check_orphans.js
+```
+
+テスト用リストを掃除します。
+
+```bash
 LIST_ID=list_123 DATA_DIR=./data node cleanup_test_list.js
 ```
 
-## ディレクトリ構成
+## 補足
 
-```text
-app-tategaki/
-├── compose.yaml
-├── .env.example
-├── scripts/
-├── data/              # 空ディレクトリのみ管理
-├── public/
-├── src/
-└── docs/
-```
-
-## 移行メモ
-
-- 旧 `tategaki` / `practice01` 系の混在を解消するための新正本候補
-- installer 配下への丸ごとコピー運用は前提にしない
-- 新環境の永続データ正本は `/mnt/.../var/docker/tategaki`、またはそれを指す `GLOBAL__HOST_DATA_ROOT/tategaki`
-- 旧PCで `/home/.../docker20250920/compose/tategaki/data` にデータが残っている場合は、HDD移行前に `/mnt/.../var/docker/tategaki` へコピーする
-- reverse proxy 連携は `docker-compose.traefik.example.yml` をベースに別途組み込む
+- リバースプロキシ連携は親リポジトリ側の設定で扱います。
+- 旧環境のデータが残っている場合は、`HOST_DATA_DIR` に指定する保存先へ移してから起動します。

@@ -53,7 +53,7 @@ async function runCrawlAll() {
                 console.log(`[Scheduler] Checking: ${novel.title}`);
                 await crawlerManager.crawlNovel(novel.site_type, novel.novel_id, novel._sourceListId);
 
-                // サーバー負荷軽減のSleep (20秒程度あける)
+                // サーバー負荷軽減のため、20秒程度待つ
                 // 100件あると 2000秒 = 33分かかる。3時間間隔なら許容範囲。
                 await sleep(20000);
 

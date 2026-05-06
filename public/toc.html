@@ -7,7 +7,7 @@
     <title>目次 - tategaki</title>
     <link rel="icon" href="/favicon.png">
 
-    <!-- Google Fonts -->
+    <!-- Google フォント -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&display=swap"
@@ -17,7 +17,7 @@
 
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        /* TOC Specific Overrides */
+        /* 目次ページ専用の上書き */
         body {
             overflow-y: auto !important;
             height: auto !important;
@@ -35,7 +35,7 @@
             position: sticky;
             top: 0;
             background: var(--c-bg);
-            /* Ensure background is opaque */
+            /* 背景を透けさせない */
             z-index: 100;
             padding: 12px 0;
             border-bottom: 1px solid var(--c-border);
@@ -103,7 +103,7 @@
         }
 
         .toc-item.current {
-            background-color: rgba(142, 53, 74, 0.08); /* accent with opacity */
+            background-color: rgba(142, 53, 74, 0.08); /* アクセント色を薄く重ねる */
             font-weight: 700;
             color: var(--c-accent);
             border-radius: 4px;
@@ -117,7 +117,7 @@
             border-bottom: none;
         }
         
-        /* Loading Spinner */
+        /* 読み込み中表示 */
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
             width: 36px;
@@ -151,7 +151,7 @@
             </div>
 
             <div id="toc-list">
-                <!-- JS Generated -->
+                <!-- JavaScript で生成 -->
             </div>
         </div>
     </div>

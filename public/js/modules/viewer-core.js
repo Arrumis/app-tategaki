@@ -13,7 +13,7 @@ function getEls() {
     };
 }
 
-// --- Settings & Style ---
+// --- 設定と表示形式 ---
 
 export function loadSettings() {
     const saved = localStorage.getItem('tategaki_settings');
@@ -38,10 +38,10 @@ export function saveSettings() {
 
 export function applyStyle() {
     document.body.setAttribute('data-theme', state.theme);
-    // Style Apply:
+    // 表示形式の反映:
     getEls().container.style.fontSize = `${state.fontSize}px`;
 
-    // Line Height & Spacing Map
+    // 行間と余白の対応表
     const spacing = {
         tight: { lh: 1.6, ps: '1.0em' },
         normal: { lh: 1.8, ps: '1.5em' },
@@ -54,7 +54,7 @@ export function applyStyle() {
     document.documentElement.style.setProperty('--viewer-paragraph-spacing', s.ps);
 }
 
-// --- Data Loading ---
+// --- データ読み込み ---
 
 export async function loadNovelInfo() {
     try {
@@ -77,10 +77,10 @@ export async function loadEpisode(initialScrollPos = 0) {
 
         renderEpisode(data);
 
-        // Wait for images
+        // 画像の読み込み待ち
         await waitForImages();
 
-        // Restore Scroll
+        // スクロール位置を復元
         requestAnimationFrame(() => {
             getEls().container.scrollLeft = (initialScrollPos !== 0) ? initialScrollPos : 0;
         });
@@ -96,7 +96,7 @@ function renderEpisode(data) {
     let html = `<h2 class="ep-title">${data.ep_title}</h2>`;
     let content = data.content;
 
-    // Image Path Replacement
+    // 画像パスの置き換え
     if (data.local_images) {
         data.local_images.forEach(img => {
             const apiPath = `/api/novels/${state.siteType}/${state.novelId}/${img.local}`;
@@ -117,18 +117,18 @@ function waitForImages() {
             img.onerror = resolve;
         });
     });
-    // Timeout 2s
+    // 2秒でタイムアウト
     const timeout = new Promise(resolve => setTimeout(resolve, 2000));
     return Promise.race([Promise.all(promises), timeout]);
 }
 
-// --- History / Bookmark ---
+// --- 履歴としおり ---
 
 export function saveHistory(scrollLeft) {
     if (!state.novelId) return;
 
-    // Debounce is handled by UI logic or here? 
-    // Let's do simple call here.
+    // 連続保存抑制は画面側またはここで扱う。
+    // ここでは単純に呼び出す。
     api.post(`/api/novels/${state.siteType}/${state.novelId}/history`, {
         listId: 'default',
         epNo: state.epNo,

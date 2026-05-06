@@ -5,7 +5,7 @@ import * as storage from '../../lib/storage.js';
 const router = express.Router();
 
 // お気に入りリスト取得 (互換性のための /favs エンドポイント)
-// TODO: RESTful的には /users/:id/lists/:listId/novels に統合したいが、現状UIとの兼ね合いで維持
+// 今後は /users/:id/lists/:listId/novels に統合したいが、現状の画面実装との兼ね合いで維持
 router.get('/favs/:id', async (req, res) => {
     try {
         const listId = req.params.id;
@@ -51,7 +51,7 @@ router.post('/users/:id/lists', async (req, res) => {
     }
 });
 
-// リストの削除（小説はdefaultへ退避）
+// リストの削除（小説は default へ退避）
 router.delete('/users/:id/lists/:listId', async (req, res) => {
     try {
         const { id, listId } = req.params;

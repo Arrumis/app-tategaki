@@ -7,7 +7,7 @@ import * as crawlerManager from '../../crawler/manager.js';
 
 const router = express.Router();
 
-// 小説情報取得 (Info)
+// 小説情報取得
 router.get('/:site/:id/info', async (req, res) => {
     try {
         const { site, id } = req.params;
@@ -34,7 +34,7 @@ router.get('/:site/:id/ep/:no', async (req, res) => {
         // 1. まずローカルを探す
         let data = await storage.readJson(filePath, null);
 
-        // 2. なければ都度取得 (On-Demand Fetch)
+        // 2. なければ都度取得
         if (!data) {
             console.log(`[API] Episode not found locally. Triggering on-demand fetch: ${site}/${id}/${epNo}`);
             try {
@@ -65,7 +65,7 @@ router.get('/:site/:id/images/:filename', (req, res) => {
 
         res.sendFile(imagePath, (err) => {
             if (err) {
-                // console.error('Image send error:', err); // 頻出するので抑制
+                // console.error('画像送信エラー:', err); // 頻出するので抑制
                 if (!res.headersSent) {
                     res.status(404).send('Image not found');
                 }

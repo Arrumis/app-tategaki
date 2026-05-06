@@ -11,7 +11,7 @@ const SITES = {
     kakuyomu
 };
 
-// 排他制御用ロック (Key: "siteType:novelId:epNo")
+// 排他制御用ロック（キー: "siteType:novelId:epNo"）
 const PROCESSING_LOCKS = new Map();
 
 export async function crawlNovel(siteType, novelId, listId) {
@@ -95,7 +95,7 @@ export async function crawlNovel(siteType, novelId, listId) {
 
                 // 都度DLで処理中の場合はスキップ (競合回避)
                 if (PROCESSING_LOCKS.has(lockKey)) {
-                    console.log(`[Crawler] Locked (On-Demand processing): ep.${epNo}. Skipping.`);
+                    console.log(`[Crawler] 都度取得中のためスキップ: ep.${epNo}`);
                     continue;
                 }
 
@@ -397,7 +397,7 @@ async function processQueue() {
 }
 
 /**
- * 都度ダウンロード実行 (On-Demand Fetch)
+ * 都度ダウンロード実行
  * シングルブラウザインスタンスを使い、指定された1話だけをDLする。
  * バックグラウンド処理との競合をロックで防ぐ。
  */
@@ -420,7 +420,7 @@ export async function fetchAndSaveEpisode(siteType, novelId, epNo) {
     }
 
     // 2. ロック取得
-    // コンテンツ取得のPromiseをセットする (外部から待てるように)
+    // コンテンツ取得の Promise をセットする（外部から待てるように）
     let resolveLock;
     let rejectLock;
     const lockPromise = new Promise((resolve, reject) => {
@@ -433,9 +433,9 @@ export async function fetchAndSaveEpisode(siteType, novelId, epNo) {
     let browser = null;
 
     try {
-        console.log(`[On-Demand] Fetching ${lockKey}...`);
+        console.log(`[都度取得] 取得中 ${lockKey}...`);
 
-        // ブラウザ取得 (Singleton)
+        // ブラウザ取得（単一インスタンス）
         browser = await launchBrowser();
         const page = await browser.newPage();
 
@@ -447,7 +447,7 @@ export async function fetchAndSaveEpisode(siteType, novelId, epNo) {
             content.download_date = new Date().toISOString();
             await storage.saveEpisode(siteType, novelId, epNo, content);
 
-            console.log(`[On-Demand] Success: ${content.ep_title}`);
+            console.log(`[都度取得] 成功: ${content.ep_title}`);
             resolveLock(); // ロック解除通知
 
             return content;
@@ -460,7 +460,7 @@ export async function fetchAndSaveEpisode(siteType, novelId, epNo) {
         }
 
     } catch (err) {
-        console.error(`[On-Demand] Error:`, err);
+        console.error(`[都度取得] エラー:`, err);
         throw err;
     } finally {
         // ロック削除
@@ -483,8 +483,8 @@ export async function resumeInterruptedDownloads() {
     console.log(`[Crawler] Resuming ${interrupted.length} interrupted downloads...`);
 
     for (const item of interrupted) {
-        // Queueに直接突っ込む
-        let url = item.title; // fallback
+        // キューに直接追加する
+        let url = item.title; // 予備値
         if (item.siteType === 'narou') url = `https://ncode.syosetu.com/${item.novelId}/`;
         else if (item.siteType === 'kakuyomu') url = `https://kakuyomu.jp/works/${item.novelId}`;
 
