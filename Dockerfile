@@ -1,10 +1,15 @@
 # ベースイメージ: Playwright公式 (Chromium等のブラウザ依存関係込み)
 FROM mcr.microsoft.com/playwright:v1.57.0-jammy
 
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Tokyo
+
 # 日本語フォントのインストール (Linux環境での文字化け防止)
 # fonts-noto-cjk: 日本語を含むCJKフォント
 RUN apt-get update && \
-    apt-get install -y fonts-noto-cjk && \
+    apt-get install -y fonts-noto-cjk tzdata && \
+    ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && \
+    echo ${TZ} > /etc/timezone && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
