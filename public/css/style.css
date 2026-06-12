@@ -140,6 +140,43 @@ a {
     /* 縦書きなのでmargin-leftが段落下の余白になる */
 }
 
+.latest-source-link-panel {
+    margin-left: calc(var(--viewer-paragraph-spacing) * 1.5);
+    padding: 1em 0.75em;
+    border-left: 1px solid var(--c-border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1em;
+    color: var(--c-text);
+}
+
+.latest-source-link-label {
+    font-size: 0.85em;
+    opacity: 0.7;
+}
+
+.latest-source-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    padding: 0.7em 0.55em;
+    border: 1px solid var(--c-accent);
+    border-radius: 8px;
+    color: var(--c-accent);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.latest-source-link:hover {
+    background: var(--c-accent);
+    color: var(--c-bg);
+}
+
+.latest-source-link .material-symbols-rounded {
+    font-size: 1.1em;
+}
+
 /* 操作用レイヤー */
 #ui-layer {
     position: fixed;
@@ -335,6 +372,39 @@ a {
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: 0.1em;
+}
+
+.source-site-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.source-site-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 36px;
+    padding: 6px 12px;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    color: var(--c-text);
+    background: transparent;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.source-site-link:hover {
+    color: var(--c-accent);
+    border-color: var(--c-accent);
+}
+
+.source-site-link .material-symbols-rounded {
+    font-size: 18px;
 }
 
 /* リストタブ */

@@ -108,6 +108,53 @@ function renderEpisode(data) {
     getEls().content.innerHTML = html;
 }
 
+function getSourceUrl(info) {
+    if (info && info.url) return info.url;
+    if (state.siteType === 'narou') return `https://ncode.syosetu.com/${state.novelId}/`;
+    if (state.siteType === 'kakuyomu') return `https://kakuyomu.jp/works/${state.novelId}`;
+    return null;
+}
+
+function getSourceLabel(info) {
+    const siteType = info?.site_type || state.siteType;
+    if (siteType === 'narou') return '小説家になろう';
+    if (siteType === 'kakuyomu') return 'カクヨム';
+    return '元サイト';
+}
+
+export function updateLatestSourceLink() {
+    const els = getEls();
+    els.content.querySelector('.latest-source-link-panel')?.remove();
+
+    if (!state.novelInfo || state.epNo !== Number(state.novelInfo.total_episodes)) return;
+
+    const url = getSourceUrl(state.novelInfo);
+    if (!url) return;
+
+    const panel = document.createElement('div');
+    panel.className = 'latest-source-link-panel';
+
+    const label = document.createElement('span');
+    label.className = 'latest-source-link-label';
+    label.textContent = '最新話まで読みました';
+
+    const link = document.createElement('a');
+    link.className = 'latest-source-link';
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = `${getSourceLabel(state.novelInfo)}で開く`;
+
+    const icon = document.createElement('span');
+    icon.className = 'material-symbols-rounded';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = 'open_in_new';
+    link.appendChild(icon);
+
+    panel.append(label, link);
+    els.content.appendChild(panel);
+}
+
 function waitForImages() {
     const images = getEls().content.querySelectorAll('img');
     const promises = Array.from(images).map(img => {
