@@ -20,6 +20,8 @@ docker compose --env-file .env.local up -d --build
 `.env.example` は公開用の見本です。実際の値は `.env.local` に書きます。
 
 - `HOST_DATA_DIR`: 小説データや履歴を保存する場所です。
+- `APP_BIND_ADDRESS`: 既定の `127.0.0.1` のまま使い、アプリをホスト外部へ
+  直接公開しません。
 - `APP_PORT`: ブラウザから開くポートです。他サービスと重なるときだけ変えます。
 - `CRAWL_INTERVAL_MS`: 定期巡回の間隔です。短くしすぎないようにします。
 - `REQUEST_DELAY_MS`: 外部サイトへアクセスする間隔です。短くしすぎないようにします。
