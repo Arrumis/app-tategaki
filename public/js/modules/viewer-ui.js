@@ -52,6 +52,7 @@ export async function initUI() {
 
     // イベント登録
     setupInteractions();
+    setupKeyboardInteractions();
 
     // 本文読み込み
     try {
@@ -193,6 +194,31 @@ function setupInteractions() {
     }
 }
 
+function setupKeyboardInteractions() {
+    document.addEventListener('keydown', (e) => {
+        // 入力欄やボタンを操作中は、ブラウザ標準のキーボード操作を優先する。
+        if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        if (e.target.closest?.('a, button, input, textarea, select, [contenteditable="true"]')) return;
+        if (els.menu.classList.contains('active') || els.settingsPanel.classList.contains('active')) return;
+
+        const pageActions = {
+            PageDown: moveNextPage,
+            ArrowLeft: moveNextPage,
+            ArrowDown: moveNextPage,
+            PageUp: movePrevPage,
+            ArrowRight: movePrevPage,
+            ArrowUp: movePrevPage,
+            Home: moveToEpisodeStart,
+            End: moveToEpisodeEnd,
+        };
+        const action = pageActions[e.key];
+        if (!action) return;
+
+        e.preventDefault();
+        action();
+    });
+}
+
 // --- 移動 ---
 
 function moveNextPage() {
@@ -234,6 +260,17 @@ function scrollByPage(direction) {
 
 function scrollByAmount(amount, behavior) {
     els.container.scrollBy({ left: amount, behavior: behavior });
+    setTimeout(checkScrollEdges, 500);
+}
+
+function moveToEpisodeStart() {
+    els.container.scrollTo({ left: 0, behavior: 'smooth' });
+    setTimeout(checkScrollEdges, 500);
+}
+
+function moveToEpisodeEnd() {
+    const scrollEnd = Math.max(0, els.container.scrollWidth - els.container.clientWidth);
+    els.container.scrollTo({ left: -scrollEnd, behavior: 'smooth' });
     setTimeout(checkScrollEdges, 500);
 }
 
