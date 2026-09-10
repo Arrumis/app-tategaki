@@ -111,6 +111,7 @@ function renderEpisode(data) {
 function getSourceUrl(info) {
     if (info && info.url) return info.url;
     if (state.siteType === 'narou') return `https://ncode.syosetu.com/${state.novelId}/`;
+    if (state.siteType === 'nocturne') return `https://novel18.syosetu.com/${state.novelId}/`;
     if (state.siteType === 'kakuyomu') return `https://kakuyomu.jp/works/${state.novelId}`;
     return null;
 }
@@ -118,6 +119,7 @@ function getSourceUrl(info) {
 function getSourceLabel(info) {
     const siteType = info?.site_type || state.siteType;
     if (siteType === 'narou') return '小説家になろう';
+    if (siteType === 'nocturne') return 'ノクターンノベルズ';
     if (siteType === 'kakuyomu') return 'カクヨム';
     return '元サイト';
 }

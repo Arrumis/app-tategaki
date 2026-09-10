@@ -564,7 +564,7 @@ async function recoverOrphanedNovels() {
     const trash = await getTrash();
     trash.novels.forEach(n => trackedIds.add(n.novel_id));
 
-    const sites = ['narou', 'kakuyomu'];
+    const sites = ['narou', 'kakuyomu', 'nocturne'];
     let recoveredCount = 0;
 
     for (const site of sites) {

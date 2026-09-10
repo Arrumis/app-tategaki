@@ -3,12 +3,14 @@ import * as storage from '../lib/storage.js';
 import { config } from '../config.js';
 import * as narou from './sites/narou.js';
 import * as kakuyomu from './sites/kakuyomu.js';
+import * as nocturne from './sites/nocturne.js';
 import path from 'path';
 
 // サイト別ハンドラの登録
 const SITES = {
     narou,
-    kakuyomu
+    kakuyomu,
+    nocturne
 };
 
 // 排他制御用ロック（キー: "siteType:novelId:epNo"）
@@ -35,7 +37,11 @@ export async function crawlNovel(siteType, novelId, listId) {
             const infoPath = path.join(config.paths.novels, siteType, novelId, 'info.json');
             const localInfo = await storage.readJson(infoPath);
 
-            if (localInfo) {
+            // 仮の目次や未取得の本文がある場合は、話数が同じでも取得を続ける。
+            const episodes = localInfo?.chapters?.flatMap(chapter => chapter.episodes) || [];
+            const complete = localInfo?.last_checked && episodes.length > 0 &&
+                (await Promise.all(episodes.map(ep => checkEpisodeExists(siteType, novelId, ep.ep_no)))).every(Boolean);
+            if (complete) {
                 // エピソード数が同じ、かつ、最終更新日が古くないならスキップ
                 // (念のため episode数のみチェックでも十分強力)
                 if (remoteInfo.total_episodes <= localInfo.total_episodes) {
@@ -187,14 +193,14 @@ async function checkEpisodeExists(siteType, novelId, epNo) {
  * @param {string} url 
  */
 export function detectSiteAndId(url) {
-    // なろう: https://ncode.syosetu.com/n1234abc/
-    if (url.includes('syosetu.com')) {
-        const match = url.match(/ncode\.syosetu\.com\/([nN]\d+[a-zA-Z]+)/);
-        if (match) return { siteType: 'narou', novelId: match[1].toLowerCase() };
+    const parsed = new URL(url);
+    if (!['https:', 'http:'].includes(parsed.protocol)) throw new Error('Unsupported URL');
+    if (['ncode.syosetu.com', 'novel18.syosetu.com'].includes(parsed.hostname)) {
+        const match = parsed.pathname.match(/^\/([nN]\d+[a-zA-Z]+)(?:\/|$)/);
+        if (match) return { siteType: parsed.hostname === 'novel18.syosetu.com' ? 'nocturne' : 'narou', novelId: match[1].toLowerCase() };
     }
-    // カクヨム: https://kakuyomu.jp/works/1177354054880238351
-    if (url.includes('kakuyomu.jp')) {
-        const match = url.match(/works\/(\d+)/);
+    if (parsed.hostname === 'kakuyomu.jp') {
+        const match = parsed.pathname.match(/^\/works\/(\d+)(?:\/|$)/);
         if (match) return { siteType: 'kakuyomu', novelId: match[1] };
     }
     throw new Error('Unsupported URL');
@@ -486,6 +492,7 @@ export async function resumeInterruptedDownloads() {
         // キューに直接追加する
         let url = item.title; // 予備値
         if (item.siteType === 'narou') url = `https://ncode.syosetu.com/${item.novelId}/`;
+        else if (item.siteType === 'nocturne') url = `https://novel18.syosetu.com/${item.novelId}/`;
         else if (item.siteType === 'kakuyomu') url = `https://kakuyomu.jp/works/${item.novelId}`;
 
         DOWNLOAD_QUEUE.push({

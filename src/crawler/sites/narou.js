@@ -14,18 +14,18 @@ export const siteType = 'narou';
  * @param {string} novelId
  * @returns {Promise<{total_episodes: number, last_update: string}|null>}
  */
-export async function checkInfoViaApi(novelId) {
+export async function checkInfoViaApi(novelId, options = {}) {
     try {
         // なろう小説API: https://dev.syosetu.com/man/api/
         // out=json: JSON形式
         // of=t-ga-nu-w: タイトル(t)+全掲載エピソード数(ga)+最終更新日時(nu)+作者(w)
         // lim=1: 1件のみ
-        const url = `https://api.syosetu.com/novelapi/api/?out=json&of=t-ga-nu-w&ncode=${novelId}&lim=1`;
+        const url = `https://api.syosetu.com/${options.apiPath || 'novelapi'}/api/?out=json&of=t-ga-nu-w&ncode=${encodeURIComponent(novelId)}&lim=1`;
 
         // 相手サイトに配慮して独自の User-Agent を指定する
         const headers = { 'User-Agent': 'TategakiCrawler/1.0' };
 
-        const res = await fetch(url, { headers });
+        const res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
         if (!res.ok) {
             throw new Error(`API response not ok: ${res.status}`);
         }
@@ -65,15 +65,19 @@ export const checkInfoLowCost = checkInfoViaApi;
  * @param {import('playwright').Page} page 
  * @param {string} novelId 
  */
-export async function getNovelInfo(page, novelId) {
-    const baseUrl = `https://ncode.syosetu.com/${novelId}/`;
+export async function getNovelInfo(page, novelId, options = {}) {
+    const sourceType = options.siteType || siteType;
+    const navigate = options.navigate || ((page, url) => page.goto(url, { waitUntil: 'domcontentloaded' }));
+    const baseUrl = `https://${options.host || 'ncode.syosetu.com'}/${novelId}/`;
     let currentUrl = baseUrl;
 
     // 基本情報は最初のページで取得
-    await page.goto(currentUrl, { waitUntil: 'domcontentloaded' });
+    await navigate(page, currentUrl);
     const title = await page.locator('.p-novel__title').innerText();
-    const author = await page.locator('.p-novel__author a').first().innerText().catch(() => page.locator('.p-novel__author').innerText());
-    const synopsis = await page.locator('#novel_ex').innerHTML(); // HTMLのまま保存
+    const authorLink = page.locator('.p-novel__author a').first();
+    const author = await (await authorLink.count() ? authorLink : page.locator('.p-novel__author')).innerText();
+    // 短編にはあらすじ欄がない場合がある。
+    const synopsis = await page.locator('#novel_ex').count() ? await page.locator('#novel_ex').innerHTML() : '';
 
     const chapters = [];
     let currentChapter = { chapter_title: '無題', episodes: [] };
@@ -85,7 +89,7 @@ export async function getNovelInfo(page, novelId) {
     while (hasNextPage) {
         console.log(`[Narou] Processing page ${pageCount}: ${currentUrl}`);
         if (pageCount > 1) { // 2ページ目以降は遷移が必要
-            await page.goto(currentUrl, { waitUntil: 'domcontentloaded' });
+            await navigate(page, currentUrl);
         }
 
         // DOM要素が安定するまで少し待つ
@@ -98,7 +102,8 @@ export async function getNovelInfo(page, novelId) {
         if (isShortStory) {
             console.log('Log: Detected as short story structure.');
             return {
-                title, author, synopsis, siteType, novelId, url: baseUrl,
+                title, author, synopsis, site_type: sourceType, novel_id: novelId, url: baseUrl,
+                last_checked: new Date().toISOString(), last_update: new Date().toISOString(),
                 total_episodes: 1,
                 chapters: [{ chapter_title: '本編', episodes: [{ ep_no: 1, ep_title: title, post_date: new Date().toISOString() }] }]
             };
@@ -176,7 +181,7 @@ export async function getNovelInfo(page, novelId) {
     }
 
     // 最後の章を追加
-    if (currentChapter.episodes.length > 0 || (chapters.length === 0 && !isShortStory)) {
+    if (currentChapter.episodes.length > 0 || chapters.length === 0) {
         chapters.push(currentChapter);
     }
 
@@ -226,7 +231,7 @@ export async function getNovelInfo(page, novelId) {
         author,
         synopsis,
         url: baseUrl,
-        site_type: siteType,
+        site_type: sourceType,
         novel_id: novelId,
         total_episodes: totalEpisodes,
         last_checked: new Date().toISOString(),
@@ -241,9 +246,15 @@ export async function getNovelInfo(page, novelId) {
  * @param {string} novelId 
  * @param {number} epNo 
  */
-export async function getEpisodeContent(page, novelId, epNo) {
-    const url = `https://ncode.syosetu.com/${novelId}/${epNo}/`;
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
+export async function getEpisodeContent(page, novelId, epNo, options = {}) {
+    const navigate = options.navigate || ((page, url) => page.goto(url, { waitUntil: 'domcontentloaded' }));
+    const baseUrl = `https://${options.host || 'ncode.syosetu.com'}/${novelId}/`;
+    const url = `${baseUrl}${epNo}/`;
+    await navigate(page, url);
+    // 短編は話数付きのURLを持たないため、先頭話だけ作品URLも確認する。
+    if (Number(epNo) === 1 && await page.locator('#novel_honbun, #novel_view, .js-novel-text, .p-novel__body').count() === 0) {
+        await navigate(page, baseUrl);
+    }
 
     // 本文セレクタの候補 (PC: #novel_honbun, SP: #novel_view, その他)
     const contentSelector = '#novel_honbun, #novel_view, .js-novel-text, .p-novel__body';
