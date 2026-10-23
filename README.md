@@ -1,5 +1,12 @@
 # app-tategaki
 
+## Node.jsのセキュリティ更新
+
+2026年10月21日の脆弱性修正に対応し、Docker内のNode.jsを24.22.1に固定しています。
+Playwrightのブラウザ環境を維持し、同梱されている旧Node.jsは使用しません。
+既存環境への反映は `docker compose --env-file .env.local up -d --build app` で行います。
+起動後は `docker compose --env-file .env.local exec app node --version` と `/health` を確認してください。
+
 ウェブ小説を縦書きで読むための自宅運用型リーダーです。
 小説データ、しおり、履歴、ログを指定した保存先へ置けます。
 
