@@ -183,8 +183,7 @@ export async function crawlNovel(siteType, novelId, listId) {
 
 // ヘルパー: エピソードファイルが存在するか確認
 async function checkEpisodeExists(siteType, novelId, epNo) {
-    const filePath = path.join(config.paths.novels, siteType, novelId, `ep_${epNo}.json`);
-    const data = await storage.readJson(filePath);
+    const data = await storage.readEpisode(siteType, novelId, epNo);
     return !!data;
 }
 
@@ -418,8 +417,7 @@ export async function fetchAndSaveEpisode(siteType, novelId, epNo) {
             await PROCESSING_LOCKS.get(lockKey);
             // 解除後、既にファイルがあるはずなので再読み込みを促す意味で完了を返す
             console.log(`[Lock] Background download finished. Return content.`);
-            const filePath = path.join(config.paths.novels, siteType, novelId, `ep_${epNo}.json`);
-            return await storage.readJson(filePath);
+            return await storage.readEpisode(siteType, novelId, epNo);
         } catch (e) {
             throw new Error('Background download failed, cannot fetch.');
         }

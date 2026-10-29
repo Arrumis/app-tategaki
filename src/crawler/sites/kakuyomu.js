@@ -276,9 +276,8 @@ export async function getEpisodeContent(page, novelId, epNo) {
         await page.waitForSelector('.widget-episodeBody', { timeout: 5000 });
     } catch (e) { }
 
-    const contentHtml = await page.locator('.widget-episodeBody').innerHTML().catch(async () => {
-        // セレクタが変わっている場合のフォールバック
-        return '<p>本文の取得に失敗しました。セレクタが変更されている可能性があります。</p>';
+    const contentHtml = await page.locator('.widget-episodeBody').innerHTML().catch(() => {
+        throw new Error(`カクヨムの本文を取得できませんでした: ${url}`);
     });
 
     const epTitle = await page.locator('.widget-episodeTitle').innerText().catch(() => `第${epNo}話`);
@@ -286,6 +285,7 @@ export async function getEpisodeContent(page, novelId, epNo) {
     return {
         novel_id: novelId,
         ep_no: epNo,
+        episode_id: targetEp.episode_id,
         ep_title: epTitle,
         content: contentHtml,
         image_urls: []

@@ -57,7 +57,27 @@ export async function getFavList(listId) {
  */
 export async function saveNovelInfo(siteType, novelId, infoData) {
     const filePath = path.join(config.paths.novels, siteType, novelId, 'info.json');
+    if (siteType === 'kakuyomu') {
+        const previous = await readJson(filePath);
+        for (const ep of previous?.chapters?.flatMap(ch => ch.episodes) || []) {
+            if (!ep.episode_id || String(ep.episode_id).startsWith('dummy_')) continue;
+            const epPath = path.join(path.dirname(filePath), `ep_${ep.ep_no}.json`);
+            const content = await readJson(epPath);
+            if (content && !content.episode_id && content.ep_title === ep.ep_title) {
+                await writeJson(epPath, { ...content, episode_id: ep.episode_id });
+            }
+        }
+    }
     await writeJson(filePath, infoData);
+}
+
+export async function readEpisode(siteType, novelId, epNo) {
+    const dir = path.join(config.paths.novels, siteType, novelId);
+    const content = await readJson(path.join(dir, `ep_${epNo}.json`));
+    if (!content || siteType !== 'kakuyomu') return content;
+    const info = await readJson(path.join(dir, 'info.json'));
+    const episode = info?.chapters?.flatMap(ch => ch.episodes).find(ep => ep.ep_no === Number(epNo));
+    return episode?.episode_id && content.episode_id === episode.episode_id ? content : null;
 }
 
 /**

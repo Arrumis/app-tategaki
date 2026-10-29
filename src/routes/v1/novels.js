@@ -29,10 +29,8 @@ router.get('/:site/:id/ep/:no', async (req, res) => {
     try {
         const { site, id, no } = req.params;
         const epNo = parseInt(no);
-        const filePath = path.join(config.paths.novels, site, id, `ep_${epNo}.json`);
-
         // 1. まずローカルを探す
-        let data = await storage.readJson(filePath, null);
+        let data = await storage.readEpisode(site, id, epNo);
 
         // 2. なければ都度取得
         if (!data) {
