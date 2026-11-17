@@ -62,6 +62,7 @@ export async function initUI() {
     // 小説情報を並行読み込み
     core.loadNovelInfo().then(() => {
         // updateToc() は削除済み
+        core.updateEpisodeSourceLink();
         core.updateLatestSourceLink();
         updateNavButtons();
     });

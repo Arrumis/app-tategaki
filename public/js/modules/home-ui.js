@@ -1,6 +1,7 @@
 
 import { state, setState } from './home-state.js';
 import * as api from '../utils/api.js';
+import { getWorkSourceUrl } from '../utils/source-url.js';
 
 // 画面要素の保持
 const els = {
@@ -375,6 +376,11 @@ async function submitAddNovel() {
 
 function openCardMenu(novel) {
     setState({ targetNovel: novel });
+    const link = document.getElementById('card-source-link');
+    const url = getWorkSourceUrl(novel.site_type, novel.novel_id);
+    link.classList.toggle('hidden', !url);
+    if (url) link.href = url;
+    else link.removeAttribute('href');
     els.cardMenuModal.classList.add('active');
 }
 

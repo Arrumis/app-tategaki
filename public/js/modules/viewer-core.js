@@ -5,6 +5,7 @@
  */
 import { state, setState } from './viewer-state.js';
 import * as api from '../utils/api.js';
+import { getWorkSourceUrl, getEpisodeSourceUrl } from '../utils/source-url.js';
 
 function getEls() {
     return {
@@ -76,6 +77,7 @@ export async function loadEpisode(initialScrollPos = 0) {
         setState({ currentEpTitle: data.ep_title });
 
         renderEpisode(data);
+        updateEpisodeSourceLink(data);
 
         // 画像の読み込み待ち
         await waitForImages();
@@ -108,12 +110,18 @@ function renderEpisode(data) {
     getEls().content.innerHTML = html;
 }
 
-function getSourceUrl(info) {
-    if (info && info.url) return info.url;
-    if (state.siteType === 'narou') return `https://ncode.syosetu.com/${state.novelId}/`;
-    if (state.siteType === 'nocturne') return `https://novel18.syosetu.com/${state.novelId}/`;
-    if (state.siteType === 'kakuyomu') return `https://kakuyomu.jp/works/${state.novelId}`;
-    return null;
+export function updateEpisodeSourceLink(data = null) {
+    const content = getEls().content;
+    content.querySelector('.episode-source-link')?.remove();
+    const url = getEpisodeSourceUrl(state.siteType, state.novelId, state.epNo, state.novelInfo, data);
+    if (!url) return;
+    const link = document.createElement('a');
+    link.className = 'episode-source-link';
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = '元ページを開く ↗';
+    content.prepend(link);
 }
 
 function getSourceLabel(info) {
@@ -130,7 +138,7 @@ export function updateLatestSourceLink() {
 
     if (!state.novelInfo || state.epNo !== Number(state.novelInfo.total_episodes)) return;
 
-    const url = getSourceUrl(state.novelInfo);
+    const url = getWorkSourceUrl(state.siteType, state.novelId);
     if (!url) return;
 
     const panel = document.createElement('div');
