@@ -6,6 +6,10 @@ import { state, setState } from './viewer-state.js';
 import * as core from './viewer-core.js';
 
 const els = {};
+let historyTimer;
+let savedScroll;
+let pendingSave;
+let episodeLoaded = false;
 
 function initEls() {
     els.container = document.getElementById('viewer-container');
@@ -32,6 +36,7 @@ export async function initUI() {
     let epNo = 1;
     try { epNo = parseInt(params.get('ep') || '1', 10); } catch (e) { }
     const scroll = parseFloat(params.get('scroll') || '0');
+    const ratio = parseFloat(params.get('ratio'));
 
     if (!novelId) {
         document.getElementById('novel-content').innerHTML = '<p>作品IDが指定されていません。</p>';
@@ -39,6 +44,7 @@ export async function initUI() {
     }
 
     setState({ siteType, novelId, epNo });
+    history.scrollRestoration = 'manual';
 
     // 全体で使う操作
     window.closeSettings = closeAllPanels;
@@ -56,29 +62,45 @@ export async function initUI() {
 
     // 本文読み込み
     try {
-        await core.loadEpisode(scroll);
+        await core.loadEpisode(Number.isFinite(scroll) ? scroll : 0, ratio >= 0 && ratio <= 1 ? ratio : null);
+        episodeLoaded = true;
+        savedScroll = els.container.scrollLeft;
+        pendingSave = core.saveHistory(true).catch(error => console.warn('読書位置を保存できませんでした', error));
+        els.container.addEventListener('scroll', scheduleHistorySave);
     } catch (e) { /* 中核処理側で処理済み */ }
 
-    // 小説情報を並行読み込み
-    core.loadNovelInfo().then(() => {
-        // updateToc() は削除済み
-        core.updateEpisodeSourceLink();
-        core.updateLatestSourceLink();
-        updateNavButtons();
-    });
+    updateNavButtons();
 
     // スクロール監視
     els.container.addEventListener('scroll', checkScrollEdges);
     window.addEventListener('resize', checkScrollEdges);
     setTimeout(checkScrollEdges, 200);
 
-    // 離脱時に自動保存
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-            if (state.scrollTimer) clearTimeout(state.scrollTimer);
-            core.saveHistory(els.container.scrollLeft);
-        }
+        if (document.visibilityState === 'hidden') flushHistory();
     });
+    window.addEventListener('pagehide', flushHistory);
+    document.getElementById('btn-home').onclick = async () => {
+        await Promise.race([flushHistory(), new Promise(resolve => setTimeout(resolve, 500))]);
+        location.href = '/';
+    };
+}
+
+function scheduleHistorySave() {
+    clearTimeout(historyTimer);
+    historyTimer = setTimeout(flushHistory, 500);
+}
+
+function flushHistory() {
+    clearTimeout(historyTimer);
+    if (!episodeLoaded || savedScroll === els.container.scrollLeft) return pendingSave;
+    const scroll = els.container.scrollLeft;
+    savedScroll = scroll;
+    pendingSave = core.saveHistory().catch(error => {
+        if (savedScroll === scroll) savedScroll = undefined;
+        console.warn('読書位置を保存できませんでした', error);
+    });
+    return pendingSave;
 }
 
 // --- 操作入力 ---
@@ -151,7 +173,8 @@ function setupInteractions() {
     if (btnBookmark) {
         btnBookmark.onclick = async () => {
             try {
-                await core.saveBookmark(els.container.scrollLeft);
+                if (!episodeLoaded) return;
+                await core.saveBookmark();
                 showToast('栞を挟みました');
             } catch (e) {
                 showToast('エラー: 保存失敗');
@@ -282,13 +305,6 @@ function checkScrollEdges() {
 
     els.btnPrevPage.disabled = isAtStart;
     els.btnNextPage.disabled = isAtEnd;
-
-    // 履歴を自動保存
-    if (state.scrollTimer) clearTimeout(state.scrollTimer);
-    const timer = setTimeout(() => {
-        core.saveHistory(els.container.scrollLeft);
-    }, 2000);
-    setState({ scrollTimer: timer });
 }
 
 function goToEp(nextEpNo) {

@@ -10,8 +10,7 @@ export const state = {
     lineHeight: 'normal',
     theme: 'light', // 明色、暗色、セピア
     novelInfo: null,
-    currentEpTitle: '',
-    scrollTimer: null
+    currentEpTitle: ''
 };
 
 const listeners = [];

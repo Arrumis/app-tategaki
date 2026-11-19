@@ -75,19 +75,33 @@ router.get('/:site/:id/images/:filename', (req, res) => {
     }
 });
 
+// 栞と読書位置を、カードを開いた時点で取得する。
+router.get('/:site/:id/progress', async (req, res) => {
+    const { site, id } = req.params;
+    res.json(await storage.getReadingPosition(site, id));
+});
+
+function parsePosition({ epNo, epTitle, scrollPos, scrollRatio }) {
+    const episode = Number(epNo);
+    const scroll = parseFloat(scrollPos);
+    if (!Number.isSafeInteger(episode) || episode < 1 || !Number.isFinite(scroll)) return null;
+    const position = { ep_no: episode, ep_title: epTitle, scroll_pos: scroll };
+    if (Number.isFinite(scrollRatio) && scrollRatio >= 0 && scrollRatio <= 1) {
+        position.scroll_ratio = scrollRatio;
+    }
+    return position;
+}
+
 // しおり更新
 router.post('/:site/:id/bookmark', async (req, res) => {
     try {
         const { site, id } = req.params;
-        const { listId, epNo, epTitle, scrollPos } = req.body;
-
+        const { listId } = req.body;
         if (!listId) return res.status(400).json({ error: 'listId is required' });
+        const position = parsePosition(req.body);
+        if (!position) return res.status(400).json({ error: 'Invalid reading position' });
 
-        await storage.updateBookmark(listId, id, {
-            ep_no: parseInt(epNo),
-            ep_title: epTitle,
-            scroll_pos: parseFloat(scrollPos)
-        });
+        await storage.updateBookmark(listId, id, position, site);
 
         res.json({ message: 'Bookmark updated successfully' });
     } catch (error) {
@@ -100,15 +114,9 @@ router.post('/:site/:id/bookmark', async (req, res) => {
 router.post('/:site/:id/history', async (req, res) => {
     try {
         const { site, id } = req.params;
-        const { listId, epNo, epTitle, scrollPos } = req.body;
-
-        if (!listId) return res.status(400).json({ error: 'listId is required' });
-
-        await storage.updateHistory(listId, id, {
-            ep_no: parseInt(epNo),
-            ep_title: epTitle,
-            scroll_pos: parseFloat(scrollPos)
-        });
+        const position = parsePosition(req.body);
+        if (!position) return res.status(400).json({ error: 'Invalid reading position' });
+        await storage.updateHistory(site, id, position, req.body.initial === true);
 
         res.json({ message: 'History updated successfully' });
     } catch (error) {

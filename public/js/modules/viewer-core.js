@@ -57,7 +57,7 @@ export function applyStyle() {
 
 // --- データ読み込み ---
 
-export async function loadNovelInfo() {
+async function loadNovelInfo() {
     try {
         const info = await api.get(`/api/novels/${state.siteType}/${state.novelId}/info`);
         setState({ novelInfo: info });
@@ -68,24 +68,30 @@ export async function loadNovelInfo() {
     }
 }
 
-export async function loadEpisode(initialScrollPos = 0) {
+export async function loadEpisode(initialScrollPos = 0, scrollRatio = null) {
     const els = getEls();
     els.content.innerHTML = '<p class="loading">読み込み中...</p>';
 
     try {
-        const data = await api.get(`/api/novels/${state.siteType}/${state.novelId}/ep/${state.epNo}`);
+        const [data] = await Promise.all([
+            api.get(`/api/novels/${state.siteType}/${state.novelId}/ep/${state.epNo}`),
+            loadNovelInfo()
+        ]);
         setState({ currentEpTitle: data.ep_title });
 
         renderEpisode(data);
         updateEpisodeSourceLink(data);
+        updateLatestSourceLink();
 
         // 画像の読み込み待ち
         await waitForImages();
 
         // スクロール位置を復元
-        requestAnimationFrame(() => {
-            getEls().container.scrollLeft = (initialScrollPos !== 0) ? initialScrollPos : 0;
-        });
+        const maxScroll = Math.max(0, els.container.scrollWidth - els.container.clientWidth);
+        const left = scrollRatio === null ? initialScrollPos : -maxScroll * scrollRatio;
+        els.container.scrollTo({ left, behavior: 'instant' });
+        // 復元時のスクロール通知が終わってから、読書操作の監視を開始する。
+        await new Promise(resolve => requestAnimationFrame(resolve));
 
     } catch (e) {
         console.error(e);
@@ -110,7 +116,7 @@ function renderEpisode(data) {
     getEls().content.innerHTML = html;
 }
 
-export function updateEpisodeSourceLink(data = null) {
+function updateEpisodeSourceLink(data) {
     const content = getEls().content;
     content.querySelector('.episode-source-link')?.remove();
     const url = getEpisodeSourceUrl(state.siteType, state.novelId, state.epNo, state.novelInfo, data);
@@ -132,7 +138,7 @@ function getSourceLabel(info) {
     return '元サイト';
 }
 
-export function updateLatestSourceLink() {
+function updateLatestSourceLink() {
     const els = getEls();
     els.content.querySelector('.latest-source-link-panel')?.remove();
 
@@ -181,26 +187,28 @@ function waitForImages() {
 
 // --- 履歴としおり ---
 
-export function saveHistory(scrollLeft) {
-    if (!state.novelId) return;
-
-    // 連続保存抑制は画面側またはここで扱う。
-    // ここでは単純に呼び出す。
-    api.post(`/api/novels/${state.siteType}/${state.novelId}/history`, {
+function getReadingPosition() {
+    const { container } = getEls();
+    const scrollPos = container.scrollLeft;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    return {
         listId: 'default',
         epNo: state.epNo,
         epTitle: state.currentEpTitle || '',
-        scrollPos: scrollLeft
-    }, { keepalive: true }).catch(err => console.warn('History save error', err));
+        scrollPos,
+        scrollRatio: maxScroll > 0 ? Math.min(1, Math.abs(scrollPos) / maxScroll) : 0
+    };
 }
 
-export async function saveBookmark(scrollLeft) {
+export function saveHistory(initial = false) {
+    return api.post(`/api/novels/${state.siteType}/${state.novelId}/history`, {
+        ...getReadingPosition(),
+        initial
+    }, { keepalive: true });
+}
+
+export async function saveBookmark() {
     if (!state.novelId) throw new Error('No novel ID');
 
-    await api.post(`/api/novels/${state.siteType}/${state.novelId}/bookmark`, {
-        listId: 'default',
-        epNo: state.epNo,
-        epTitle: state.currentEpTitle || '',
-        scrollPos: scrollLeft
-    });
+    await api.post(`/api/novels/${state.siteType}/${state.novelId}/bookmark`, getReadingPosition());
 }

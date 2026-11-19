@@ -15,6 +15,9 @@ const els = {
     addNovelUrl: document.getElementById('add-novel-url'),
     addNovelList: document.getElementById('add-novel-list'),
     cardMenuModal: document.getElementById('card-menu-modal'),
+    resumeDialog: document.getElementById('resume-dialog'),
+    resumeBookmark: document.getElementById('resume-bookmark'),
+    resumeHistory: document.getElementById('resume-history'),
     homeTocPanel: document.getElementById('home-toc-panel'),
     homeTocList: document.getElementById('home-toc-list'),
     homePanelBackdrop: document.getElementById('home-panel-backdrop')
@@ -172,6 +175,31 @@ function renderList() {
     });
 }
 
+function readerUrl(novel, position) {
+    const query = new URLSearchParams({ site: novel.site_type, id: novel.novel_id, ep: position?.ep_no || 1 });
+    if (Number.isFinite(position?.scroll_pos)) query.set('scroll', position.scroll_pos);
+    if (Number.isFinite(position?.scroll_ratio)) query.set('ratio', position.scroll_ratio);
+    return `/reader.html?${query}`;
+}
+
+async function resumeNovel(novel, preferBookmark = false) {
+    try {
+        const { bookmark, history } = await api.get(`/api/novels/${novel.site_type}/${novel.novel_id}/progress`);
+        if (!bookmark || preferBookmark) {
+            location.href = readerUrl(novel, (preferBookmark && bookmark) || history);
+            return;
+        }
+        els.resumeBookmark.href = readerUrl(novel, bookmark);
+        els.resumeBookmark.textContent = `栞から再開（第${bookmark.ep_no}話）`;
+        els.resumeHistory.href = readerUrl(novel, history);
+        els.resumeHistory.textContent = history ? `最後に到達した位置から再開（第${history.ep_no}話）` : '第1話から読む';
+        els.resumeDialog.showModal();
+    } catch (error) {
+        console.error(error);
+        alert('再開位置の取得に失敗しました。');
+    }
+}
+
 function createNovelCard(novel) {
     const card = document.createElement('div');
 
@@ -185,7 +213,7 @@ function createNovelCard(novel) {
         const displayTitle = (novel.title && novel.title !== 'ダウンロード中...') ? novel.title : 'ダウンロード中...';
 
         if (isReadable) {
-            card.onclick = () => window.location.href = `/reader.html?site=${novel.site_type}&id=${novel.novel_id}&ep=1`;
+            card.onclick = () => resumeNovel(novel);
             card.style.cursor = 'pointer';
         }
 
@@ -203,23 +231,20 @@ function createNovelCard(novel) {
     } else {
         // 通常表示
         card.className = 'novel-card';
-        let resumeUrl = `/reader.html?site=${novel.site_type}&id=${novel.novel_id}&ep=1`;
         let progressText = `未読`;
         let currentEp = 0;
 
         if (novel.history) {
-            resumeUrl = `/reader.html?site=${novel.site_type}&id=${novel.novel_id}&ep=${novel.history.ep_no}&scroll=${novel.history.scroll_pos}`;
             currentEp = novel.history.ep_no;
             progressText = `${currentEp}/${novel.total_episodes}話 読書中`;
         } else if (novel.bookmark) {
-            resumeUrl = `/reader.html?site=${novel.site_type}&id=${novel.novel_id}&ep=${novel.bookmark.ep_no}&scroll=${novel.bookmark.scroll_pos}`;
             currentEp = novel.bookmark.ep_no;
             progressText = `${currentEp}/${novel.total_episodes}話 読書中`;
         } else {
             progressText = `未読 (${novel.total_episodes}話)`;
         }
 
-        card.onclick = () => window.location.href = resumeUrl;
+        card.onclick = () => resumeNovel(novel);
 
         // バッジ
         let newBadgeHtml = '';
@@ -257,7 +282,7 @@ function createNovelCard(novel) {
         if (bmBtn) {
             bmBtn.onclick = (e) => {
                 e.stopPropagation();
-                window.location.href = `/reader.html?site=${novel.site_type}&id=${novel.novel_id}&ep=${novel.bookmark.ep_no}&scroll=${novel.bookmark.scroll_pos}`;
+                resumeNovel(novel, true);
             };
         }
     }

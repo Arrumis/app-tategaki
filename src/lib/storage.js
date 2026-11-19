@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { randomUUID } from 'node:crypto';
 import { config } from '../config.js';
 
 // ヘルパー: ディレクトリが存在することを確認する（なければ作る）
@@ -32,8 +33,15 @@ export async function readJson(filePath, defaultValue = null) {
 export async function writeJson(filePath, data) {
     const dir = path.dirname(filePath);
     await ensureDir(dir);
-    // 整形して書き込む
-    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    // 保存中の一覧を他の端末が読んでも、途中の JSON を返さない。
+    const temporaryPath = path.join(dir, `.${path.basename(filePath)}.${randomUUID()}.tmp`);
+    try {
+        await fs.writeFile(temporaryPath, JSON.stringify(data, null, 2), 'utf-8');
+        await fs.rename(temporaryPath, filePath);
+    } catch (error) {
+        await fs.rm(temporaryPath, { force: true }).catch(() => {});
+        throw error;
+    }
 }
 
 /**
@@ -169,15 +177,12 @@ export async function updateNovelMetadataInAllLists(novelId, metadata) {
  */
 let storageLock = Promise.resolve();
 async function runWithLock(fn) {
-    const prevLock = storageLock;
-    storageLock = (async () => {
-        await prevLock;
-        return await fn();
-    })();
-    return storageLock;
+    const result = storageLock.then(fn);
+    storageLock = result.catch(() => {});
+    return result;
 }
 
-export async function updateBookmark(listId, novelId, bookmarkData) {
+export async function updateBookmark(listId, novelId, bookmarkData, siteType) {
     return await runWithLock(async () => {
         // 1. その小説が含まれるすべてのリストIDを取得
         // (listIdが 'default' の場合も考慮して、まずは全検索相当を行うのが確実)
@@ -199,13 +204,10 @@ export async function updateBookmark(listId, novelId, bookmarkData) {
 
             if (!list) continue;
 
-            const novel = list.novels.find(n => n.novel_id === novelId);
+            const novel = list.novels.find(n => n.novel_id === novelId && (!siteType || n.site_type === siteType));
             if (novel) {
                 // しおり更新
-                novel.bookmark = {
-                    ...novel.bookmark,
-                    ...bookmarkData
-                };
+                novel.bookmark = { ...bookmarkData, updated_at: new Date().toISOString() };
                 // 保存
                 await writeJson(filePath, list);
 
@@ -223,49 +225,60 @@ export async function updateBookmark(listId, novelId, bookmarkData) {
     });
 }
 
-/**
- * 閲覧履歴を更新する (オートセーブ用)
- * @param {string} listId 
- * @param {string} novelId 
- * @param {object} historyData { ep_no, ep_title, scroll_pos }
- */
-export async function updateHistory(listId, novelId, historyData) {
+function positionTime(position) {
+    return Date.parse(position?.updated_at) || 0;
+}
+
+function furthestHistory(a, b) {
+    const episodeDiff = (Number(a?.ep_no) || 0) - (Number(b?.ep_no) || 0);
+    if (episodeDiff !== 0) return episodeDiff > 0 ? a : b;
+    return positionTime(a) >= positionTime(b) ? a : b;
+}
+
+function latestBookmark(a, b) {
+    if (!a || !b) return a || b;
+    const timeDiff = positionTime(a) - positionTime(b);
+    if (timeDiff !== 0) return timeDiff > 0 ? a : b;
+    return a.ep_no >= b.ep_no ? a : b;
+}
+
+async function getReadingEntries(siteType, novelId) {
+    const { lists } = await getUserLists();
+    const entries = [];
+    for (const { id } of lists) {
+        const filePath = path.join(config.paths.favs, `${id}.json`);
+        const list = await readJson(filePath);
+        const novel = list?.novels?.find(n => n.site_type === siteType && n.novel_id === novelId);
+        if (novel) entries.push({ filePath, list, novel });
+    }
+    return entries;
+}
+
+export async function getReadingPosition(siteType, novelId) {
+    return runWithLock(async () => {
+        let history = null;
+        let bookmark = null;
+        for (const { novel } of await getReadingEntries(siteType, novelId)) {
+            history = furthestHistory(history, novel.history);
+            bookmark = latestBookmark(bookmark, novel.bookmark) || null;
+        }
+        return { history, bookmark };
+    });
+}
+
+export async function updateHistory(siteType, novelId, historyData, initial) {
     return await runWithLock(async () => {
-        const targetListIds = await findAllListsContainingNovel(novelId);
-
-        if (targetListIds.length === 0) {
-            console.warn(`[Storage] Novel ${novelId} not found in any list for history update.`);
-            return null;
+        const entries = await getReadingEntries(siteType, novelId);
+        const previous = entries.reduce((best, { novel }) => furthestHistory(best, novel.history), null);
+        // 古い話を開き直しても、別の端末で到達した話数を戻さない。
+        if (!entries.length || historyData.ep_no < previous?.ep_no) return;
+        // 本文を開いただけでは、同じ話の保存位置を上書きしない。
+        if (initial && historyData.ep_no === previous?.ep_no) return;
+        const history = { ...historyData, updated_at: new Date().toISOString() };
+        for (const { filePath, list, novel } of entries) {
+            novel.history = history;
+            await writeJson(filePath, list);
         }
-
-        let resultList = null;
-
-        for (const targetId of targetListIds) {
-            const filePath = path.join(config.paths.favs, `${targetId}.json`);
-            const list = await readJson(filePath);
-
-            if (!list) continue;
-
-            const novel = list.novels.find(n => n.novel_id === novelId);
-            if (novel) {
-                // 履歴更新
-                novel.history = {
-                    ...novel.history,
-                    ...historyData,
-                    updated_at: new Date().toISOString()
-                };
-                // 保存
-                await writeJson(filePath, list);
-
-                if (targetId === listId) {
-                    resultList = list;
-                } else if (listId === 'default' && !resultList) {
-                    resultList = list;
-                }
-            }
-        }
-
-        return resultList;
     });
 }
 
@@ -336,13 +349,9 @@ export async function addNovelToList(listId, novelData) {
         if (exists) {
             list.novels = list.novels.map(n => {
                 if (n.novel_id === novelData.novel_id) {
-                    const oldBm = n.bookmark || { ep_no: 0 };
-                    const newBm = novelData.bookmark || { ep_no: 0 };
-                    const mergedBookmark = (newBm.ep_no > oldBm.ep_no) ? (novelData.bookmark || n.bookmark) : n.bookmark;
-                    const oldHist = n.history || { updated_at: '1970-01-01' };
-                    const newHist = novelData.history || { updated_at: '1970-01-01' };
-                    const mergedHistory = (new Date(newHist.updated_at) > new Date(oldHist.updated_at)) ? (novelData.history || n.history) : n.history;
-                    return { ...novelData, bookmark: mergedBookmark, history: mergedHistory };
+                    const bookmark = latestBookmark(n.bookmark, novelData.bookmark);
+                    const history = furthestHistory(n.history, novelData.history);
+                    return { ...novelData, bookmark, history };
                 }
                 return n;
             });
@@ -442,8 +451,9 @@ export async function deleteUserList(userId, listId) {
                 if (existsIdx >= 0) {
                     // 既存ならマージ
                     const existing = defaultList.novels[existsIdx];
-                    const mergedBm = (novel.bookmark?.ep_no > existing.bookmark?.ep_no) ? novel.bookmark : existing.bookmark;
-                    defaultList.novels[existsIdx] = { ...novel, bookmark: mergedBm };
+                    const bookmark = latestBookmark(novel.bookmark, existing.bookmark);
+                    const history = furthestHistory(novel.history, existing.history);
+                    defaultList.novels[existsIdx] = { ...novel, bookmark, history };
                 } else {
                     defaultList.novels.push(novel);
                 }
@@ -482,17 +492,10 @@ export async function getUserAllNovels(userId) {
 
                 if (allNovelsMap.has(novel.novel_id)) {
                     const existing = allNovelsMap.get(novel.novel_id);
-                    const getHistoryTime = (n) => n.history && n.history.updated_at ? new Date(n.history.updated_at).getTime() : 0;
-                    const timeNew = getHistoryTime(novel);
-                    const timeOld = getHistoryTime(existing);
-
-                    if (timeNew > timeOld) {
-                        allNovelsMap.set(novel.novel_id, novel);
-                    } else if (timeNew === timeOld) {
-                        const bmNew = novel.bookmark ? novel.bookmark.ep_no : 0;
-                        const bmOld = existing.bookmark ? existing.bookmark.ep_no : 0;
-                        if (bmNew > bmOld) allNovelsMap.set(novel.novel_id, novel);
-                    }
+                    const history = furthestHistory(existing.history, novel.history);
+                    const bookmark = latestBookmark(existing.bookmark, novel.bookmark);
+                    const source = history === novel.history && history !== existing.history ? novel : existing;
+                    allNovelsMap.set(novel.novel_id, { ...source, history, bookmark });
                 } else {
                     allNovelsMap.set(novel.novel_id, novel);
                 }
