@@ -2,7 +2,7 @@
 /**
  * Viewer UI Logic
  */
-import { state, setState } from './viewer-state.js';
+import { fontSizes, state, setState } from './viewer-state.js';
 import * as core from './viewer-core.js';
 
 const els = {};
@@ -198,8 +198,7 @@ function setupInteractions() {
     if (ctrlFontSize) {
         ctrlFontSize.onclick = (e) => {
             if (e.target.tagName !== 'BUTTON') return;
-            const sizeMap = { 'small': 14, 'medium': 18, 'large': 22, 'xlarge': 26 };
-            setState({ fontSize: sizeMap[e.target.dataset.val] || 18 });
+            setState({ fontSize: fontSizes[e.target.dataset.val] });
             core.applyStyle();
             core.saveSettings();
             updateSettingsUI();
@@ -318,10 +317,8 @@ function updateSettingsUI() {
     document.querySelectorAll('.theme-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.val === state.theme);
     });
-    const sizeMap = { 14: 'small', 18: 'medium', 22: 'large', 26: 'xlarge' };
-    const currentSizeKey = sizeMap[state.fontSize] || 'medium';
     document.querySelectorAll('#ctrl-font-size button').forEach(b => {
-        b.classList.toggle('active', b.dataset.val === currentSizeKey);
+        b.classList.toggle('active', fontSizes[b.dataset.val] === state.fontSize);
     });
     document.querySelectorAll('#ctrl-line-height button').forEach(b => {
         b.classList.toggle('active', b.dataset.val === state.lineHeight);

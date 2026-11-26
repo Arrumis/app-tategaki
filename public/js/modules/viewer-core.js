@@ -3,7 +3,7 @@
  * Viewer Core Logic
  * (Data loading, Style application, Rendering)
  */
-import { state, setState } from './viewer-state.js';
+import { fontSizes, state, setState } from './viewer-state.js';
 import * as api from '../utils/api.js';
 import { getWorkSourceUrl, getEpisodeSourceUrl } from '../utils/source-url.js';
 
@@ -20,8 +20,9 @@ export function loadSettings() {
     const saved = localStorage.getItem('tategaki_settings');
     if (saved) {
         const parsed = JSON.parse(saved);
+        const fontSize = Number(parsed.fontSize);
         setState({
-            fontSize: parsed.fontSize || 18,
+            fontSize: Object.values(fontSizes).includes(fontSize) ? fontSize : fontSizes.small,
             theme: parsed.theme || 'light',
             lineHeight: parsed.lineHeight || 'normal'
         });
@@ -42,12 +43,12 @@ export function applyStyle() {
     // 表示形式の反映:
     getEls().container.style.fontSize = `${state.fontSize}px`;
 
-    // 行間と余白の対応表
+    // 文字幅に半文字分の行間を足し、段階ごとに4分の1文字ずつ広げる。
     const spacing = {
-        tight: { lh: 1.6, ps: '1.0em' },
-        normal: { lh: 1.8, ps: '1.5em' },
-        relaxed: { lh: 2.1, ps: '2.0em' },
-        loose: { lh: 2.4, ps: '2.5em' }
+        tight: { lh: 1.5, ps: '1.0em' },
+        normal: { lh: 1.75, ps: '1.5em' },
+        relaxed: { lh: 2, ps: '2.0em' },
+        loose: { lh: 2.25, ps: '2.5em' }
     };
     const s = spacing[state.lineHeight] || spacing.normal;
 

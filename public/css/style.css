@@ -133,6 +133,11 @@ a {
     text-align: justify;
 }
 
+/* なろう系の本文に残る元サイトの行間指定より、読書設定を優先する。 */
+.ep-body .js-novel-text {
+    line-height: var(--viewer-line-height) !important;
+}
+
 /* 段落設定 */
 .ep-body p,
 .ep-body div {

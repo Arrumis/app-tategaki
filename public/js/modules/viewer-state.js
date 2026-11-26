@@ -2,11 +2,13 @@
 /**
  * Viewer State Management
  */
+export const fontSizes = { small: 18, medium: 22, large: 26, xlarge: 30 };
+
 export const state = {
     siteType: 'narou',
     novelId: null,
     epNo: 1,
-    fontSize: 18,
+    fontSize: fontSizes.small,
     lineHeight: 'normal',
     theme: 'light', // 明色、暗色、セピア
     novelInfo: null,
